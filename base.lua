@@ -120,19 +120,41 @@ local Window = WindUI:CreateWindow({
 
 Window:SetToggleKey(Enum.KeyCode.K)
 
-Window:EditOpenButton({
-    Title = "Lunar Hub by kyokie",
-    Icon = "moon",
-    CornerRadius = UDim.new(0,16),
-    StrokeThickness = 2,
-    Color = ColorSequence.new(
-        Color3.fromHex("1e40ff"),
-        Color3.fromHex("60a5fa")
-    ),
-    OnlyMobile = false,
-    Enabled = true,
-    Draggable = true,
-})
+local function applyOpenButton()
+    Window:EditOpenButton({
+        Title = "Lunar Hub by kyokie",
+        Icon = "moon",
+        CornerRadius = UDim.new(0,16),
+        StrokeThickness = 2,
+        Color = ColorSequence.new(
+            Color3.fromHex("1e40ff"),
+            Color3.fromHex("60a5fa")
+        ),
+        OnlyMobile = false,
+        Enabled = true,
+        Draggable = true,
+    })
+end
+applyOpenButton()
+
+-- Keep WindUI ScreenGuis alive across respawns
+local function protectWindUIGuis()
+    local pg = player:FindFirstChild("PlayerGui")
+    if not pg then return end
+    for _, gui in ipairs(pg:GetChildren()) do
+        if gui:IsA("ScreenGui") then
+            local name = string.lower(gui.Name)
+            if name:find("wind") or name:find("lunar") or name:find("hub") or gui:GetAttribute("WindUI") then
+                gui.ResetOnSpawn = false
+                gui.IgnoreGuiInset = true
+                if gui.DisplayOrder < 100 then
+                    gui.DisplayOrder = 100
+                end
+            end
+        end
+    end
+end
+task.defer(protectWindUIGuis)
 
 -- ====================== TABS ======================
 local main = Window:Tab({ Title = "Main", Locked = false })
@@ -1629,6 +1651,7 @@ local debounce = false
 local dashDuration = 0.2
 local dashforce = 150
 local m1resetGui = nil
+local m1resetEnabled = false -- track toggle state across respawns
 
 local function triggerDash()
     if debounce then return end
@@ -1649,7 +1672,9 @@ local function triggerDash()
     end
 
     local connect = RunService.Heartbeat:Connect(function()
-        root.AssemblyLinearVelocity = root.CFrame.RightVector * dashforce
+        if root and root.Parent then
+            root.AssemblyLinearVelocity = root.CFrame.RightVector * dashforce
+        end
     end)
 
     local originalCamCF = cam.CFrame
@@ -1658,7 +1683,9 @@ local function triggerDash()
     task.wait(dashDuration)
 
     fireQ()
-    root.AssemblyLinearVelocity = Vector3.zero
+    if root and root.Parent then
+        root.AssemblyLinearVelocity = Vector3.zero
+    end
     cam.CFrame = originalCamCF
 
     if connect then connect:Disconnect() end
@@ -1672,12 +1699,67 @@ local function triggerDash()
     debounce = false
 end
 
+local function createM1ResetGui()
+    -- Destroy old one if it exists
+    if m1resetGui and m1resetGui.Parent then
+        m1resetGui:Destroy()
+    end
+    m1resetGui = nil
+
+    local pg = player:FindFirstChild("PlayerGui") or player:WaitForChild("PlayerGui", 5)
+    if not pg then return end
+
+    m1resetGui = Instance.new("ScreenGui")
+    m1resetGui.Name = "m1reset"
+    m1resetGui.ResetOnSpawn = false
+    m1resetGui.IgnoreGuiInset = true
+    m1resetGui.DisplayOrder = 200
+    m1resetGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    m1resetGui.Parent = pg
+
+    local dashframe = Instance.new("Frame")
+    dashframe.Name = "dashframe"
+    dashframe.Parent = m1resetGui
+    dashframe.BackgroundTransparency = 1
+    dashframe.Size = UDim2.new(0, 150, 0, 150)
+    dashframe.Position = UDim2.new(0.5, -75, 0.5, -75)
+    dashframe.Active = true
+    dashframe.Draggable = true
+
+    local cat = Instance.new("ImageButton")
+    cat.Name = "cat"
+    cat.Parent = dashframe
+    cat.BackgroundTransparency = 1
+    cat.Position = UDim2.new(0.1, 0, 0.2, 0)
+    cat.Size = UDim2.new(0, 79, 0, 72)
+    cat.Image = "rbxassetid://124624838814157"
+    cat.Activated:Connect(triggerDash)
+
+    local idk = Instance.new("TextLabel")
+    idk.Name = "idk"
+    idk.Parent = dashframe
+    idk.BackgroundTransparency = 0
+    idk.Position = UDim2.new(0.1, 0, 0.05, 0)
+    idk.Size = UDim2.new(0, 79, 0, 18)
+    idk.Font = Enum.Font.SourceSans
+    idk.Text = "drag"
+    idk.TextColor3 = Color3.new(0, 0, 0)
+    idk.TextSize = 14
+end
+
+local function destroyM1ResetGui()
+    if m1resetGui then
+        pcall(function() m1resetGui:Destroy() end)
+        m1resetGui = nil
+    end
+end
+
 M1reset:Keybind({
     Title = "Dash Key",
     Desc = "Key to trigger dash",
     Value = "E",
     Callback = function()
-        if m1resetGui and m1resetGui.Enabled then
+        if m1resetEnabled then
             triggerDash()
         end
     end
@@ -1690,46 +1772,11 @@ M1reset:Toggle({
     Type = "Checkbox",
     Value = false,
     Callback = function(state)
+        m1resetEnabled = state
         if state then
-            if m1resetGui then m1resetGui:Destroy() end
-            m1resetGui = Instance.new("ScreenGui")
-            m1resetGui.Name = "m1reset"
-            m1resetGui.Parent = player:WaitForChild("PlayerGui")
-            m1resetGui.ResetOnSpawn = false
-
-            local dashframe = Instance.new("Frame")
-            dashframe.Name = "dashframe"
-            dashframe.Parent = m1resetGui
-            dashframe.BackgroundTransparency = 1
-            dashframe.Size = UDim2.new(0, 150, 0, 150)
-            dashframe.Position = UDim2.new(0.5, -75, 0.5, -75)
-            dashframe.Active = true
-            dashframe.Draggable = true
-
-            local cat = Instance.new("ImageButton")
-            cat.Name = "cat"
-            cat.Parent = dashframe
-            cat.BackgroundTransparency = 1
-            cat.Position = UDim2.new(0.1, 0, 0.2, 0)
-            cat.Size = UDim2.new(0, 79, 0, 72)
-            cat.Image = "rbxassetid://124624838814157"
-            cat.Activated:Connect(triggerDash)
-
-            local idk = Instance.new("TextLabel")
-            idk.Name = "idk"
-            idk.Parent = dashframe
-            idk.BackgroundTransparency = 0
-            idk.Position = UDim2.new(0.1, 0, 0.05, 0)
-            idk.Size = UDim2.new(0, 79, 0, 18)
-            idk.Font = Enum.Font.SourceSans
-            idk.Text = "drag"
-            idk.TextColor3 = Color3.new(0, 0, 0)
-            idk.TextSize = 14
+            createM1ResetGui()
         else
-            if m1resetGui then
-                m1resetGui:Destroy()
-                m1resetGui = nil
-            end
+            destroyM1ResetGui()
         end
     end
 })
@@ -1753,6 +1800,47 @@ M1reset:Input({
         if num then dashforce = num end
     end
 })
+
+-- ====================== FIX: UI AFTER DEATH / RESPAWN ======================
+-- After dying, some games destroy ScreenGuis or break input.
+-- We re-apply open button, protect WindUI guis, and recreate M1 GUI if needed.
+local function onCharacterRespawned(char)
+    task.spawn(function()
+        -- Wait for character to fully load
+        char:WaitForChild("Humanoid", 10)
+        char:WaitForChild("HumanoidRootPart", 10)
+        task.wait(0.8) -- small delay so the game finishes cleaning PlayerGui
+
+        -- 1. Protect / fix WindUI ScreenGuis
+        protectWindUIGuis()
+
+        -- 2. Re-apply open button + toggle key (restores clickability)
+        pcall(function()
+            Window:SetToggleKey(Enum.KeyCode.K)
+            applyOpenButton()
+        end)
+
+        -- 3. Recreate M1 Reset GUI if it was enabled
+        if m1resetEnabled then
+            -- Check if existing gui is still valid
+            if not m1resetGui or not m1resetGui.Parent then
+                createM1ResetGui()
+            end
+        end
+
+        -- 4. Refresh camera reference
+        cam = workspace.CurrentCamera
+    end)
+end
+
+player.CharacterAdded:Connect(onCharacterRespawned)
+
+-- Also protect when PlayerGui gets new children (some games re-create it)
+player:WaitForChild("PlayerGui").ChildAdded:Connect(function(child)
+    if child:IsA("ScreenGui") then
+        task.defer(protectWindUIGuis)
+    end
+end)
 
 -- ====================== REDUCE LAG ======================
 reduce:Button({
