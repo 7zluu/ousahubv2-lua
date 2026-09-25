@@ -138,6 +138,7 @@ end
 applyOpenButton()
 
 -- Keep WindUI ScreenGuis alive across respawns
+-- IMPORTANT: do NOT raise DisplayOrder — that blocks the game's combat buttons (M1/block/dash)
 local function protectWindUIGuis()
     local pg = player:FindFirstChild("PlayerGui")
     if not pg then return end
@@ -145,11 +146,9 @@ local function protectWindUIGuis()
         if gui:IsA("ScreenGui") then
             local name = string.lower(gui.Name)
             if name:find("wind") or name:find("lunar") or name:find("hub") or gui:GetAttribute("WindUI") then
-                gui.ResetOnSpawn = false
-                gui.IgnoreGuiInset = true
-                if gui.DisplayOrder < 100 then
-                    gui.DisplayOrder = 100
-                end
+                pcall(function()
+                    gui.ResetOnSpawn = false
+                end)
             end
         end
     end
@@ -1713,7 +1712,8 @@ local function createM1ResetGui()
     m1resetGui.Name = "m1reset"
     m1resetGui.ResetOnSpawn = false
     m1resetGui.IgnoreGuiInset = true
-    m1resetGui.DisplayOrder = 200
+    -- Low DisplayOrder so it does NOT cover game combat buttons (M1/block/dash)
+    m1resetGui.DisplayOrder = 5
     m1resetGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     m1resetGui.Parent = pg
 
@@ -1721,8 +1721,9 @@ local function createM1ResetGui()
     dashframe.Name = "dashframe"
     dashframe.Parent = m1resetGui
     dashframe.BackgroundTransparency = 1
-    dashframe.Size = UDim2.new(0, 150, 0, 150)
-    dashframe.Position = UDim2.new(0.5, -75, 0.5, -75)
+    dashframe.Size = UDim2.new(0, 100, 0, 110)
+    -- Bottom-left corner — avoids covering center/bottom combat buttons
+    dashframe.Position = UDim2.new(0, 20, 1, -130)
     dashframe.Active = true
     dashframe.Draggable = true
 
@@ -1733,6 +1734,7 @@ local function createM1ResetGui()
     cat.Position = UDim2.new(0.1, 0, 0.2, 0)
     cat.Size = UDim2.new(0, 79, 0, 72)
     cat.Image = "rbxassetid://124624838814157"
+    cat.Active = true
     cat.Activated:Connect(triggerDash)
 
     local idk = Instance.new("TextLabel")
@@ -1745,6 +1747,7 @@ local function createM1ResetGui()
     idk.Text = "drag"
     idk.TextColor3 = Color3.new(0, 0, 0)
     idk.TextSize = 14
+    idk.Active = false -- label should not sink clicks
 end
 
 local function destroyM1ResetGui()
@@ -1802,43 +1805,78 @@ M1reset:Input({
 })
 
 -- ====================== FIX: UI AFTER DEATH / RESPAWN ======================
--- After dying, some games destroy ScreenGuis or break input.
--- We re-apply open button, protect WindUI guis, and recreate M1 GUI if needed.
+-- Problem: after death, game combat buttons (M1 / block / dash) stop receiving clicks
+-- if our GUIs sit on top of them or if input focus is stuck.
+local GuiService = game:GetService("GuiService")
+
 local function onCharacterRespawned(char)
     task.spawn(function()
-        -- Wait for character to fully load
-        char:WaitForChild("Humanoid", 10)
+        local humanoid = char:WaitForChild("Humanoid", 10)
         char:WaitForChild("HumanoidRootPart", 10)
-        task.wait(0.8) -- small delay so the game finishes cleaning PlayerGui
 
-        -- 1. Protect / fix WindUI ScreenGuis
+        -- Let the game finish recreating its combat UI first
+        task.wait(1.2)
+
+        -- 1. Clear any stuck GUI focus (very common cause of "buttons don't click")
+        pcall(function()
+            GuiService.SelectedObject = nil
+            UserInputService.MouseIconEnabled = true
+        end)
+
+        -- 2. Make sure humanoid is not left in a blocked state
+        if humanoid then
+            pcall(function()
+                humanoid.PlatformStand = false
+                humanoid.AutoRotate = true
+                humanoid:ChangeState(Enum.HumanoidStateType.Running)
+            end)
+        end
+
+        -- 3. Only set ResetOnSpawn on our UIs — never raise DisplayOrder above the game
         protectWindUIGuis()
 
-        -- 2. Re-apply open button + toggle key (restores clickability)
+        -- 4. Re-apply hub open button / key (does not cover combat buttons)
         pcall(function()
             Window:SetToggleKey(Enum.KeyCode.K)
             applyOpenButton()
         end)
 
-        -- 3. Recreate M1 Reset GUI if it was enabled
+        -- 5. Recreate M1 Reset GUI only if enabled (now in bottom-left, low DisplayOrder)
         if m1resetEnabled then
-            -- Check if existing gui is still valid
             if not m1resetGui or not m1resetGui.Parent then
                 createM1ResetGui()
             end
         end
 
-        -- 4. Refresh camera reference
+        -- 6. Refresh camera + root references
         cam = workspace.CurrentCamera
+        hrp = getRoot(char)
+
+        -- 7. Reset attach / fling state so nothing keeps sinking input
+        attached = false
+        isAttaching = false
+        if followConnection then
+            followConnection:Disconnect()
+            followConnection = nil
+        end
+        if attachConnection then
+            attachConnection:Disconnect()
+            attachConnection = nil
+        end
     end)
 end
 
 player.CharacterAdded:Connect(onCharacterRespawned)
 
--- Also protect when PlayerGui gets new children (some games re-create it)
+-- Only protect ResetOnSpawn when our own guis appear — do not touch DisplayOrder
 player:WaitForChild("PlayerGui").ChildAdded:Connect(function(child)
     if child:IsA("ScreenGui") then
-        task.defer(protectWindUIGuis)
+        local name = string.lower(child.Name)
+        if name:find("wind") or name:find("lunar") or name:find("hub") or name == "m1reset" then
+            task.defer(function()
+                pcall(function() child.ResetOnSpawn = false end)
+            end)
+        end
     end
 end)
 
