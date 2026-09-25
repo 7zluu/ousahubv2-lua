@@ -1,18 +1,14 @@
 --[[
-    Lunar Hub - Improved Version
-    Original by kyokie | Cleaned & improved
-    
-    Changes:
-    - Webhook replaced with user's
-    - Fixed missing variables & function bugs
-    - Config save system (WindUI Folder)
-    - Notifications when tech activates
-    - Ping-based delay adjustment
-    - "Disable All Techs" button
-    - Better closest enemy detection
-    - Anti-AFK
-    - Improved keybinds
+    ╔═══════════════════════════════════════════════════════════════╗
+    ║           LUNAR HUB v2.0 - Delta Executor Optimized          ║
+    ║                  Mejorado por kyokie                          ║
+    ║         Script compilado y optimizado para mobile            ║
+    ╚═══════════════════════════════════════════════════════════════╝
 ]]
+
+--//═══════════════════════════════════════════════════════════════
+--//                  SERVICIOS Y CONFIGURACIÓN
+--//═══════════════════════════════════════════════════════════════
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -20,14 +16,18 @@ local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-local VirtualUser = game:GetService("VirtualUser")
 
 local player = Players.LocalPlayer or Players.PlayerAdded:Wait()
+local char = player.Character or player.CharacterAdded:Wait()
+local hrp = char:WaitForChild("HumanoidRootPart")
+local humanoid = char:WaitForChild("Humanoid")
 local cam = workspace.CurrentCamera
 
--- ====================== WEBHOOK (TU WEBHOOK) ======================
-local webhook = "https://discord.com/api/webhooks/1553065064901386341/nV-zUqMiTim0yIS1_Fjv6CW-jRuBTLo0B_sfR3nfe8OghRK-R_vxVoY8j3bAFp6KLDpk"
+--//═══════════════════════════════════════════════════════════════
+--//                    WEBHOOK CONFIGURACIÓN
+--//═══════════════════════════════════════════════════════════════
+
+local WEBHOOK_URL = "https://discord.com/api/webhooks/1553065064901386341/nV-zUqMiTim0yIS1_Fjv6CW-jRuBTLo0B_sfR3nfe8OghRK-R_vxVoY8j3bAFp6KLDpk"
 
 local executor = "Unknown"
 pcall(function()
@@ -36,63 +36,96 @@ pcall(function()
     end
 end)
 
-local data = {
-    username = "executor info",
-    embeds = {{
-        title = "Script Executed",
-        color = 65280,
-        fields = {
-            { name = "Username", value = player.Name, inline = true },
-            { name = "UserId", value = tostring(player.UserId), inline = true },
-            { name = "Executor", value = executor, inline = true },
-            { name = "PlaceId", value = tostring(game.PlaceId), inline = true }
-        }
-    }}
-}
+--//═══════════════════════════════════════════════════════════════
+--//                   FUNCIÓN DE WEBHOOK MEJORADO
+--//═══════════════════════════════════════════════════════════════
 
-local json = HttpService:JSONEncode(data)
-local req = (syn and syn.request) or request or http_request
-if req then
-    pcall(function()
+local function sendWebhook(title, description, color, fields)
+    local webhookData = {
+        username = "🌙 Lunar Hub Execution Log",
+        avatar_url = "https://cdn.discordapp.com/emojis/1124851218346549325.png",
+        embeds = {{
+            title = title or "Script Executed",
+            description = description or "No description",
+            color = color or 3447003, -- blue
+            thumbnail = {
+                url = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=420&height=420&format=png"
+            },
+            fields = fields or {},
+            footer = {
+                text = "Lunar Hub v2.0 | " .. os.date("%Y-%m-%d %H:%M:%S"),
+                icon_url = "https://cdn.discordapp.com/emojis/1124851218346549325.png"
+            },
+            timestamp = os.date('!%Y-%m-%dT%H:%M:%S.000Z')
+        }}
+    }
+
+    local json = HttpService:JSONEncode(webhookData)
+    local req = (syn and syn.request) or request or http_request
+    
+    if req then
         req({
-            Url = webhook,
+            Url = WEBHOOK_URL,
             Method = "POST",
             Headers = { ["Content-Type"] = "application/json" },
             Body = json
         })
-    end)
+    end
 end
 
--- ====================== LOAD UI ======================
+--//═══════════════════════════════════════════════════════════════
+--//                    ENVÍO INICIAL DE WEBHOOK
+--//═══════════════════════════════════════════════════════════════
+
+sendWebhook(
+    "🚀 Lunar Hub Iniciado",
+    "El script ha sido ejecutado correctamente en el juego",
+    16711680, -- Rojo
+    {
+        { name = "👤 Usuario", value = player.Name, inline = true },
+        { name = "🆔 User ID", value = tostring(player.UserId), inline = true },
+        { name = "⚙️ Executor", value = executor, inline = true },
+        { name = "🎮 Game ID", value = tostring(game.PlaceId), inline = true },
+        { name = "💻 Sistema", value = "Delta Executor (Mobile)", inline = true },
+        { name = "🌐 Versión Hub", value = "v2.0 MEJORADO", inline = true }
+    }
+)
+
+--//═══════════════════════════════════════════════════════════════
+--//                    CARGAR WINDUI
+--//═══════════════════════════════════════════════════════════════
+
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
 
+--// Notificación de carga
 WindUI:Notify({
-    Title = "Lunar Hub Improved",
-    Content = "Loaded successfully",
+    Title = "🌙 Lunar Hub",
+    Content = "Script iniciado - v2.0 Optimizado",
     Duration = 3
 })
 
+--// Popup de Discord (Opcional)
 WindUI:Popup({
-    Title = "Discord",
+    Title = "📱 Información",
     Icon = "info",
-    Content = "Join our Discord server!",
+    Content = "Lunar Hub v2.0 cargado para Delta Executor",
     Buttons = {
         {
-            Title = "Cancel",
+            Title = "Cerrar",
             Variant = "Tertiary",
             Callback = function() end,
         },
         {
-            Title = "Copy Discord",
+            Title = "Discord",
             Icon = "arrow-right",
             Variant = "Primary",
             Callback = function()
                 if setclipboard then
                     setclipboard("https://discord.gg/YJ64HgMNfd")
                     WindUI:Notify({
-                        Title = "Copied!",
-                        Content = "Discord invite copied to clipboard.",
-                        Duration = 3
+                        Title = "✅ Copiado!",
+                        Content = "Enlace copiado al portapapeles",
+                        Duration = 2
                     })
                 end
             end,
@@ -100,2067 +133,525 @@ WindUI:Popup({
     }
 })
 
+--//═══════════════════════════════════════════════════════════════
+--//                    CREAR VENTANA PRINCIPAL
+--//═══════════════════════════════════════════════════════════════
+
 local Window = WindUI:CreateWindow({
-    Title = "Lunar Hub",
+    Title = "🌙 Lunar Hub v2.0",
     Icon = "moon",
-    Author = "by kyokie | Improved",
-    Folder = "LunarHubConfig", -- Config save folder
-    Size = UDim2.fromOffset(800, 700),
-    MinSize = Vector2.new(560, 350),
-    MaxSize = Vector2.new(1000, 1000),
+    Author = "by kyokie",
+    Folder = "LunarHubV2",
+    Size = UDim2.fromOffset(850, 750),
+    MinSize = Vector2.new(600, 400),
+    MaxSize = Vector2.new(1100, 900),
     Transparent = true,
     Theme = "Dark",
     Resizable = true,
     Background = "rbxassetid://134927494800983",
-    SideBarWidth = 200,
-    BackgroundImageTransparency = 0.3,
+    SideBarWidth = 220,
+    BackgroundImageTransparency = 0.25,
     HideSearchBar = true,
     ScrollBarEnabled = false,
 })
 
 Window:SetToggleKey(Enum.KeyCode.K)
 
-local function applyOpenButton()
-    Window:EditOpenButton({
-        Title = "Lunar Hub by kyokie",
-        Icon = "moon",
-        CornerRadius = UDim.new(0,16),
-        StrokeThickness = 2,
-        Color = ColorSequence.new(
-            Color3.fromHex("1e40ff"),
-            Color3.fromHex("60a5fa")
-        ),
-        OnlyMobile = false,
-        Enabled = true,
-        Draggable = true,
-    })
-end
-applyOpenButton()
+Window:EditOpenButton({
+    Title = "🌙 Lunar Hub",
+    Icon = "moon",
+    CornerRadius = UDim.new(0, 16),
+    StrokeThickness = 2,
+    Color = ColorSequence.new(
+        Color3.fromHex("1e40ff"),
+        Color3.fromHex("60a5fa")
+    ),
+    OnlyMobile = false,
+    Enabled = true,
+    Draggable = true,
+})
 
--- Keep WindUI ScreenGuis alive across respawns
--- IMPORTANT: do NOT raise DisplayOrder — that blocks the game's combat buttons (M1/block/dash)
-local function protectWindUIGuis()
-    local pg = player:FindFirstChild("PlayerGui")
-    if not pg then return end
-    for _, gui in ipairs(pg:GetChildren()) do
-        if gui:IsA("ScreenGui") then
-            local name = string.lower(gui.Name)
-            if name:find("wind") or name:find("lunar") or name:find("hub") or gui:GetAttribute("WindUI") then
-                pcall(function()
-                    gui.ResetOnSpawn = false
-                end)
-            end
-        end
-    end
-end
-task.defer(protectWindUIGuis)
-
--- ====================== TABS ======================
-local main = Window:Tab({ Title = "Main", Locked = false })
-local Techs = Window:Tab({ Title = "Techs/Macro", Locked = false })
-local meowtech = Window:Tab({ Title = "meowtech/uppercut", Locked = false })
-local k1ngtech = Window:Tab({ Title = "k1ng tech/uppercut", Locked = false })
-local oreo = Window:Tab({ Title = "Oreo tech/uppercut", Locked = false })
-local kitty = Window:Tab({ Title = "kitty tech/uppercut", Locked = false })
-local kak = Window:Tab({ Title = "kakyo tech/uppercut", Locked = false })
-local inner = Window:Tab({ Title = "inner dash/uppercut", Locked = false })
-local instanttwis = Window:Tab({ Title = "instant twisted/m4", Locked = false })
-local lethal = Window:Tab({ Title = "lethal/lethalwhirlwind", Locked = false })
-local tech = Window:Tab({ Title = "kyoto", Locked = false })
-local plat = Window:Tab({ Title = "youtube/tiktok/discord", Locked = false })
-local tp = Window:Tab({ Title = "teleport", Locked = false })
-local esp = Window:Tab({ Title = "Esp", Locked = false })
-local M1reset = Window:Tab({ Title = "m1 reset", Locked = false })
-local reduce = Window:Tab({ Title = "reduce lag", Locked = false })
-local settingsTab = Window:Tab({ Title = "Settings / QoL", Locked = false })
-
-main:Select()
-
--- ====================== SERVICES & CONSTANTS ======================
-local DashRemote = nil
-pcall(function()
-    local resources = ReplicatedStorage:FindFirstChild("Resources")
-    local brother = resources and resources:FindFirstChild("Brother")
-    local friend = brother and brother:FindFirstChild("#Friend")
-    DashRemote = friend and friend:FindFirstChild("Communicate")
-end)
--- Fallback: search by name if path changed
-if not DashRemote then
-    pcall(function()
-        for _, obj in ipairs(ReplicatedStorage:GetDescendants()) do
-            if obj:IsA("RemoteEvent") and (obj.Name == "Communicate" or obj.Name:lower():find("dash")) then
-                DashRemote = obj
-                break
-            end
-        end
-    end)
-end
-if DashRemote then
-    print("[Lunar Hub] DashRemote found:", DashRemote:GetFullName())
-else
-    warn("[Lunar Hub] DashRemote NOT found — dash techs may fail")
-end
+--//═══════════════════════════════════════════════════════════════
+--//                    CONSTANTES Y VARIABLES
+--//═══════════════════════════════════════════════════════════════
 
 local UPPERCUT = {
     ["rbxassetid://10503381238"] = true,
     ["rbxassetid://13379003796"] = true,
 }
-local REQUIRED_ANIM_FOR_ATTACH = 10479335397
-local TARGET_ANIM_ID = 12296113986
-local M4_ANIM_ID = 13294471966
 
--- ====================== STATE VARIABLES (FIXED) ======================
-local hrp
-local followConnection
-local attached = false
-local attachCooldown = false
-local onCooldown = false
-local didUppercut = false
-
--- Tech toggles
-local MeowTechEnabled = false
-local meowtechv2 = false
-local KingTechEnabled = false
-local dripz = false          -- oreo
-local oreov2 = false         -- kitty
-local kakyo = false
-local leeinstanttwisted = false
-local lethalEnabled = false
-local LethalDashEnabled = false
-local instantlethal = false
-local boomy = false
-local innerlethal = false
-local innerdash = false
-local kyokiedash = false
-local AutoKyotoEnabled = false
-local AutoKyototween = false
-local AutoKyotoLegitEnabled = false
-local lunarextender = false
-local deathcounter = false
-local hiddenfling = false
-local WalkSpeedEnabled = false
-local walkSpeedValue = 23
-local instanttwisted = false
-local oreorev = false
-local kyokie = false
-local supatech = false
-
--- Settings
-local meowstart = 0.3
-local meowDuration = 0.3
-local kingstart = 0.3
-local kingwait = 0.2
-local oreostart = 0.3
-local oreowait = 0.5
-local oreocam = 1
-local oreojump = 54
-local kittystartjump = 0.1
-local kittystart = 0.3
-local kittywait = 0.1
-local kittycam = 1
-local kittydur = 0.2
-local kakyostart = 0.3
-local kakyojump = 40
-local kakyocam = 4
-local waitpress = 0.2
-local leewait = 0.2
-local turn = -90
-local leewait2 = 0.05
-local turn2 = 115
-local meowlethalstart = 1.7
-local meowlethaldur = 0.5
-local normallethalstart = 1.7
-local secondforflip = 0.2
-local instantlethalstart = 1.7
-local instantlethalwait = 0.5
-local boomystart = 1.7
-local boomyjump = 65
-local boomywait = 0.1
-local boomycam = 3
-local flingPower = 10000
-
--- QoL Settings
-local PingAdjustEnabled = true
-local NotifyOnTech = true
-local AntiAFKEnabled = not UserInputService.TouchEnabled -- off by default on mobile
-local BasePing = 50 -- ms reference
-
--- ====================== UTILITY FUNCTIONS ======================
-local function getRoot(char)
-    if not char then return nil end
-    return char:FindFirstChild("HumanoidRootPart")
-        or char:FindFirstChild("UpperTorso")
-        or char:FindFirstChild("LowerTorso")
-        or char:FindFirstChild("Torso")
-end
-
-local function getPing()
-    local ok, ping = pcall(function()
-        return player:GetNetworkPing() * 1000
-    end)
-    return (ok and ping) or 50
-end
-
--- Adjust delay based on ping
-local function adj(delay)
-    if not PingAdjustEnabled then return delay end
-    local ping = getPing()
-    local factor = math.clamp(ping / BasePing, 0.7, 2.0)
-    return delay * factor
-end
-
-local function notifyTech(name)
-    if NotifyOnTech then
-        WindUI:Notify({
-            Title = "Tech Activated",
-            Content = name .. " triggered",
-            Duration = 1.5,
-            Icon = "zap"
-        })
-    end
-end
-
--- Improved closest enemy (checks workspace.Live + Players)
-local function getClosestEnemy(maxDist)
-    maxDist = maxDist or 15
-    if not hrp then return nil end
-
-    local best, bestDist = nil, maxDist
-
-    -- First try workspace.Live (game specific)
-    local liveFolder = workspace:FindFirstChild("Live")
-    if liveFolder then
-        for _, model in ipairs(liveFolder:GetChildren()) do
-            if model:IsA("Model") and model ~= player.Character then
-                local humanoid = model:FindFirstChildOfClass("Humanoid")
-                if humanoid and humanoid.Health > 0 then
-                    local root = getRoot(model)
-                    if root then
-                        local dist = (root.Position - hrp.Position).Magnitude
-                        if dist < bestDist then
-                            best = root
-                            bestDist = dist
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-    -- Fallback to Players
-    if not best then
-        for _, plr in ipairs(Players:GetPlayers()) do
-            if plr ~= player and plr.Character then
-                local humanoid = plr.Character:FindFirstChildOfClass("Humanoid")
-                if humanoid and humanoid.Health > 0 then
-                    local root = getRoot(plr.Character)
-                    if root then
-                        local dist = (root.Position - hrp.Position).Magnitude
-                        if dist < bestDist then
-                            best = root
-                            bestDist = dist
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-    return best
-end
-
--- Mobile detection
-local isMobile = UserInputService.TouchEnabled
--- If true, techs may work better on mobile but can break touch buttons briefly
-local MobileKeySim = true
-
-if isMobile then
-    print("[Lunar Hub] Mobile detected — using mobile-safe dash (remote + button + short key sim)")
-end
-
--- Forward declaration (used by fireQ / safeKeyPress before the full body)
-local restoreMobileControls
-
--- Try to press a GuiButton by firing its click connections (executor APIs)
-local function clickGuiButton(btn)
-    if not btn then return false end
-    local ok = false
-    pcall(function()
-        if firesignal then
-            firesignal(btn.MouseButton1Click)
-            firesignal(btn.Activated)
-            ok = true
-        end
-    end)
-    pcall(function()
-        if getconnections then
-            for _, conn in ipairs(getconnections(btn.MouseButton1Click)) do
-                if conn.Fire then conn:Fire() ok = true end
-            end
-            for _, conn in ipairs(getconnections(btn.Activated)) do
-                if conn.Fire then conn:Fire() ok = true end
-            end
-        end
-    end)
-    pcall(function()
-        if btn.Activate then btn:Activate() ok = true end
-    end)
-    return ok
-end
-
--- Find dash / skill buttons on mobile UI by name
-local function findAndClickButton(keywords)
-    local pg = player:FindFirstChild("PlayerGui")
-    if not pg then return false end
-    for _, obj in ipairs(pg:GetDescendants()) do
-        if obj:IsA("GuiButton") or obj:IsA("ImageButton") or obj:IsA("TextButton") then
-            local n = string.lower(obj.Name)
-            for _, kw in ipairs(keywords) do
-                if n:find(kw, 1, true) then
-                    if clickGuiButton(obj) then
-                        return true
-                    end
-                end
-            end
-        end
-    end
-    return false
-end
-
-local function safeKeyPress(keyCode)
-    if isMobile then
-        if not MobileKeySim then return end
-        -- Short keyboard pulse then restore touch UI (needed for some techs on mobile)
-        pcall(function()
-            VirtualInputManager:SendKeyEvent(true, keyCode, false, game)
-            VirtualInputManager:SendKeyEvent(false, keyCode, false, game)
-        end)
-        task.delay(0.15, function()
-            restoreMobileControls()
-        end)
-        return
-    end
-    pcall(function()
-        VirtualInputManager:SendKeyEvent(true, keyCode, false, game)
-        VirtualInputManager:SendKeyEvent(false, keyCode, false, game)
-    end)
-end
-
-local function fireQ()
-    -- 1) Game remote (main method)
-    if DashRemote then
-        pcall(function()
-            DashRemote:FireServer({
-                [1] = {Dash = Enum.KeyCode.W, Key = Enum.KeyCode.Q, Goal = "KeyPress"}
-            })
-        end)
-    end
-
-    -- 2) On mobile: also try clicking the on-screen dash button
-    if isMobile then
-        findAndClickButton({"dash", "qdash", "q_btn", "qbtn", "btn_q", "dodge", "sidestep"})
-    end
-
-    -- 3) Keyboard simulation
-    if isMobile then
-        if MobileKeySim then
-            pcall(function()
-                VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Q, false, game)
-                VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Q, false, game)
-            end)
-            -- Restore touch buttons shortly after so they don't stay broken
-            task.delay(0.15, function()
-                restoreMobileControls()
-            end)
-        end
-    else
-        pcall(function()
-            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Q, false, game)
-            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Q, false, game)
-        end)
-    end
-end
-
-local function autoPressQ()
-    fireQ()
-end
-
--- Try to bring back mobile combat / touch controls after death or rejoin
-restoreMobileControls = function()
-    if not UserInputService.TouchEnabled then return end
-
-    local pg = player:FindFirstChild("PlayerGui")
-    if not pg then return end
-
-    -- Re-enable TouchGui if the game uses default Roblox touch controls
-    local touchGui = pg:FindFirstChild("TouchGui")
-    if touchGui then
-        touchGui.Enabled = true
-        for _, d in ipairs(touchGui:GetDescendants()) do
-            if d:IsA("GuiObject") then
-                d.Visible = true
-            end
-        end
-    end
-
-    -- Re-enable common custom mobile combat UI names
-    for _, gui in ipairs(pg:GetChildren()) do
-        if gui:IsA("ScreenGui") then
-            local n = string.lower(gui.Name)
-            if n:find("touch") or n:find("mobile") or n:find("combat")
-                or n:find("hotbar") or n:find("skill") or n:find("ability")
-                or n:find("button") or n:find("control") then
-                gui.Enabled = true
-                pcall(function()
-                    gui.ResetOnSpawn = true -- let the game manage it
-                end)
-            end
-        end
-    end
-
-    -- Clear focus so touch works again
-    pcall(function()
-        game:GetService("GuiService").SelectedObject = nil
-    end)
-end
-
-local function forceJump(height)
-    height = height or 50
-    local char = player.Character
-    if not char then return end
-    local root = getRoot(char)
-    if root then
-        root.Velocity = Vector3.new(root.Velocity.X, height, root.Velocity.Z)
-    end
-end
-
-local function flip()
-    if cam then
-        local cf = cam.CFrame
-        local look = cf.LookVector
-        local newLook = Vector3.new(-look.X, look.Y, -look.Z)
-        cam.CFrame = CFrame.new(cf.Position, cf.Position + newLook)
-    end
-end
-
--- Attach system
-local function detach()
-    if followConnection then
-        followConnection:Disconnect()
-        followConnection = nil
-    end
-    attached = false
-end
-
-local function attachTo(enemyHRP, duration, ignoreAnim)
-    if attached then return end
-    enemyHRP = getRoot(enemyHRP.Parent) or enemyHRP
-    if not hrp or not enemyHRP then return end
-
-    local humanoid = player.Character and player.Character:FindFirstChild("Humanoid")
-    if not humanoid then return end
-
-    if not ignoreAnim then
-        local animPlaying = false
-        for _, track in ipairs(humanoid:GetPlayingAnimationTracks()) do
-            local animIdNumber = tonumber(track.Animation.AnimationId:match("%d+"))
-            if animIdNumber == REQUIRED_ANIM_FOR_ATTACH then
-                animPlaying = true
-                break
-            end
-        end
-        if not animPlaying then return end
-    end
-
-    attached = true
-    local start = tick()
-    followConnection = RunService.Heartbeat:Connect(function()
-        if not enemyHRP or not enemyHRP.Parent then
-            detach()
-            return
-        end
-        hrp.CFrame = CFrame.new(enemyHRP.Position + Vector3.new(0, 1, 0)) * CFrame.Angles(math.rad(90), 0, 0)
-        if tick() - start >= (duration or 0.3) then
-            detach()
-        end
-    end)
-end
-
-local isAttaching = false
-local attachConnection
-
-local function attachUnderTarget(targetCharacter, duration)
-    if isAttaching then return end
-    if not targetCharacter or not targetCharacter:FindFirstChild("HumanoidRootPart") then return end
-
-    local character = player.Character
-    if not character or not character:FindFirstChild("HumanoidRootPart") then return end
-
-    isAttaching = true
-    local endTime = os.clock() + duration
-
-    attachConnection = RunService.RenderStepped:Connect(function()
-        if os.clock() >= endTime then
-            if attachConnection then attachConnection:Disconnect() end
-            attachConnection = nil
-            isAttaching = false
-            return
-        end
-
-        if character and character:FindFirstChild("HumanoidRootPart") then
-            local myHrp = character.HumanoidRootPart
-            local targetHRP = targetCharacter.HumanoidRootPart
-            myHrp.CFrame = CFrame.new(targetHRP.Position + Vector3.new(0, 3, 0)) * CFrame.Angles(math.rad(90), 0, 0)
-        end
-    end)
-end
-
--- Twisted function (fixed name)
-local function doTwisted()
-    local function getNearestPlayerTorso()
-        local nearest = nil
-        local shortestDistance = math.huge
-        local myChar = player.Character
-        local myHRP = myChar and getRoot(myChar)
-        if not myHRP then return nil end
-
-        for _, otherPlayer in pairs(Players:GetPlayers()) do
-            if otherPlayer ~= player and otherPlayer.Character then
-                local torso = getRoot(otherPlayer.Character)
-                if torso then
-                    local distance = (torso.Position - myHRP.Position).Magnitude
-                    if distance < shortestDistance then
-                        shortestDistance = distance
-                        nearest = torso
-                    end
-                end
-            end
-        end
-        return nearest
-    end
-
-    local target = getNearestPlayerTorso()
-    if not target then return end
-
-    cam.CFrame = CFrame.new(cam.CFrame.Position, target.Position)
-    fireQ()
-
-    local function rotateCamera(angle)
-        local cf = cam.CFrame
-        local look = cf.LookVector
-        local flat = Vector3.new(look.X, 0, look.Z)
-        if flat.Magnitude == 0 then flat = Vector3.new(0, 0, 1) end
-        flat = flat.Unit
-        local rot = CFrame.fromAxisAngle(Vector3.yAxis, math.rad(angle))
-        cam.CFrame = CFrame.new(cf.Position, cf.Position + (rot * flat + Vector3.new(0, look.Y, 0)))
-    end
-
-    rotateCamera(-70)
-    task.wait(0.50)
-    rotateCamera(120)
-end
-
--- ====================== FLING ======================
-local function flingLoop()
-    local lp = Players.LocalPlayer
-    while true do
-        RunService.Heartbeat:Wait()
-        if hiddenfling then
-            local c = lp.Character
-            local root = c and getRoot(c)
-            if root then
-                local vel = root.Velocity
-                root.Velocity = vel * flingPower + Vector3.new(0, flingPower, 0)
-                RunService.RenderStepped:Wait()
-                if c and root then
-                    root.Velocity = vel
-                end
-                RunService.Stepped:Wait()
-                if c and root then
-                    root.Velocity = vel + Vector3.new(0, 0.1, 0)
-                end
-            end
-        end
-    end
-end
-task.spawn(flingLoop)
-
--- ====================== ANTI VOID / ANTI DEATH ======================
-workspace.FallenPartsDestroyHeight = 0/0
-workspace:GetPropertyChangedSignal("FallenPartsDestroyHeight"):Connect(function()
-    workspace.FallenPartsDestroyHeight = 0/0
-end)
-
-local function AntiDeath(char)
-    local hum = char:WaitForChild("Humanoid")
-    local root = char:WaitForChild("HumanoidRootPart")
-    local lastHealth = hum.Health
-
-    RunService.RenderStepped:Connect(function()
-        lastHealth = hum.Health
-    end)
-
-    hum:GetPropertyChangedSignal("Health"):Connect(function()
-        if hum.Health <= 0 and root.Position.Y <= 0 then
-            hum.Health = lastHealth
-        end
-    end)
-end
-
-if player.Character then AntiDeath(player.Character) end
-player.CharacterAdded:Connect(AntiDeath)
-
--- ====================== ANTI-AFK ======================
-task.spawn(function()
-    while true do
-        task.wait(60)
-        if AntiAFKEnabled then
-            pcall(function()
-                VirtualUser:CaptureController()
-                VirtualUser:ClickButton2(Vector2.new())
-            end)
-        end
-    end
-end)
-
--- ====================== CHARACTER SETUP ======================
-local function setupCharacter(char)
-    local humanoid = char:WaitForChild("Humanoid")
-    hrp = getRoot(char)
-
-    attached = false
-    attachCooldown = false
-    if followConnection then
-        followConnection:Disconnect()
-        followConnection = nil
-    end
-
-    humanoid.Died:Connect(function()
-        attached = false
-        isAttaching = false
-        attachCooldown = false
-        if followConnection then
-            followConnection:Disconnect()
-            followConnection = nil
-        end
-        if attachConnection then
-            attachConnection:Disconnect()
-            attachConnection = nil
-        end
-        -- Unlock humanoid state before character is removed
-        pcall(function()
-            humanoid.PlatformStand = false
-            humanoid.AutoRotate = true
-        end)
-        hrp = nil
-
-        -- Clear GUI focus so combat buttons work after respawn
-        pcall(function()
-            game:GetService("GuiService").SelectedObject = nil
-        end)
-    end)
-
-    humanoid.AnimationPlayed:Connect(function(track)
-        local anim = track.Animation
-        if not anim then return end
-        local animIdNumber = tonumber(anim.AnimationId:match("%d+"))
-
-        if UPPERCUT[anim.AnimationId] then
-            didUppercut = true
-            task.delay(0.6, function() didUppercut = false end)
-        end
-
-        if animIdNumber == REQUIRED_ANIM_FOR_ATTACH then
-            onCooldown = true
-            task.delay(5, function() onCooldown = false end)
-        end
-
-        -- ========== MEOW TECH ==========
-        if MeowTechEnabled and UPPERCUT[anim.AnimationId] and not attachCooldown then
-            local enemy = getClosestEnemy(10)
-            if enemy then
-                task.delay(adj(meowstart), function()
-                    fireQ()
-                    attachTo(enemy, meowDuration)
-                    notifyTech("MeowTech")
-                end)
-            end
-        end
-
-        if MeowTechEnabled and animIdNumber == REQUIRED_ANIM_FOR_ATTACH and didUppercut then
-            if attached or attachCooldown then return end
-            attachCooldown = true
-            didUppercut = false
-            task.delay(0.35, function() attachCooldown = false end)
-            task.delay(0.08, function()
-                local enemy = getClosestEnemy(12)
-                if enemy then
-                    attachTo(enemy, 0.3, true)
-                    notifyTech("MeowTech Attach")
-                end
-            end)
-        end
-
-        if meowtechv2 and UPPERCUT[anim.AnimationId] and not onCooldown then
-            local enemyHRP = getClosestEnemy(10)
-            if enemyHRP then
-                task.delay(adj(meowstart), function()
-                    autoPressQ()
-                    attachUnderTarget(enemyHRP.Parent, meowDuration)
-                    notifyTech("MeowTech v2")
-                end)
-            end
-        end
-
-        -- ========== KING TECH ==========
-        if KingTechEnabled and UPPERCUT[anim.AnimationId] and not onCooldown then
-            local enemy = getClosestEnemy(10)
-            if enemy then
-                task.delay(adj(kingstart), function()
-                    autoPressQ()
-                    forceJump()
-                    task.delay(adj(kingwait), flip)
-                    notifyTech("K1ng Tech")
-                end)
-            end
-        end
-
-        -- ========== OREO / DRIPZ ==========
-        if dripz and UPPERCUT[anim.AnimationId] and not onCooldown then
-            local enemy = getClosestEnemy(10)
-            if enemy then
-                task.delay(adj(oreostart), function()
-                    autoPressQ()
-                    forceJump(oreojump)
-                end)
-                task.delay(adj(oreowait), function()
-                    local startTime = tick()
-                    local targetChar = enemy.Parent
-                    local targetPart = targetChar:FindFirstChild("Right Arm") or getRoot(targetChar)
-                    local connection
-                    connection = RunService.RenderStepped:Connect(function()
-                        if not targetPart or not targetPart.Parent then
-                            connection:Disconnect()
-                            return
-                        end
-                        local camCF = cam.CFrame
-                        local camPos = camCF.Position
-                        local armCF = targetPart.CFrame
-                        local backOffset = armCF:VectorToWorldSpace(Vector3.new(0, 0, -1))
-                        local backPosition = armCF.Position + backOffset
-                        local dir = Vector3.new(backPosition.X - camPos.X, 0, backPosition.Z - camPos.Z)
-                        if dir.Magnitude > 0 then
-                            dir = dir.Unit
-                            local targetYaw = math.atan2(dir.Z, dir.X)
-                            local currentYaw = math.atan2(camCF.LookVector.Z, camCF.LookVector.X)
-                            local newYaw = currentYaw + (targetYaw - currentYaw) * oreocam
-                            local pitch = math.asin(camCF.LookVector.Y)
-                            local newLook = Vector3.new(
-                                math.cos(newYaw) * math.cos(pitch),
-                                math.sin(pitch),
-                                math.sin(newYaw) * math.cos(pitch)
-                            )
-                            cam.CFrame = CFrame.new(camPos, camPos + newLook)
-                        end
-                        if tick() - startTime >= 0.2 then
-                            connection:Disconnect()
-                        end
-                    end)
-                    notifyTech("Oreo Tech")
-                end)
-            end
-        end
-
-        -- ========== KITTY ==========
-        if oreov2 and UPPERCUT[anim.AnimationId] and not onCooldown then
-            local enemy = getClosestEnemy(10)
-            if enemy then
-                task.delay(adj(kittystartjump), function() forceJump(60) end)
-                task.delay(adj(kittystart), function()
-                    autoPressQ()
-                    flip()
-                    task.wait(adj(kittywait))
-                    local startTime = tick()
-                    local targetChar = enemy.Parent
-                    local targetPart = targetChar:FindFirstChild("Left Arm") or getRoot(targetChar)
-                    local connection
-                    connection = RunService.RenderStepped:Connect(function()
-                        if not targetPart or not targetPart.Parent then
-                            connection:Disconnect()
-                            return
-                        end
-                        local camCF = cam.CFrame
-                        local camPos = camCF.Position
-                        local lookCF = targetPart.CFrame
-                        local dir = Vector3.new(lookCF.Position.X - camPos.X, 0, lookCF.Position.Z - camPos.Z)
-                        if dir.Magnitude > 0 then
-                            dir = dir.Unit
-                            local targetYaw = math.atan2(dir.Z, dir.X)
-                            local currentYaw = math.atan2(camCF.LookVector.Z, camCF.LookVector.X)
-                            local newYaw = currentYaw + (targetYaw - currentYaw) * kittycam
-                            local pitch = math.asin(camCF.LookVector.Y)
-                            local newLook = Vector3.new(
-                                math.cos(newYaw) * math.cos(pitch),
-                                math.sin(pitch),
-                                math.sin(newYaw) * math.cos(pitch)
-                            )
-                            cam.CFrame = CFrame.new(camPos, camPos + newLook)
-                        end
-                        if tick() - startTime >= 0.2 then
-                            connection:Disconnect()
-                        end
-                    end)
-                    notifyTech("Kitty Tech")
-                end)
-            end
-        end
-
-        -- ========== KAKYO ==========
-        if kakyo and UPPERCUT[anim.AnimationId] and not onCooldown then
-            local enemy = getClosestEnemy(10)
-            if enemy then
-                task.delay(adj(kakyostart), function()
-                    forceJump(kakyojump)
-                    local startTime = tick()
-                    local targetChar = enemy.Parent
-                    local targetPart = targetChar:FindFirstChild("Right Arm") or getRoot(targetChar)
-                    local connection
-                    connection = RunService.RenderStepped:Connect(function()
-                        if not targetPart or not targetPart.Parent then
-                            connection:Disconnect()
-                            return
-                        end
-                        local camCF = cam.CFrame
-                        local camPos = camCF.Position
-                        local armCF = targetPart.CFrame
-                        local dir = Vector3.new(armCF.Position.X - camPos.X, 0, armCF.Position.Z - camPos.Z)
-                        if dir.Magnitude > 0 then
-                            dir = dir.Unit
-                            local targetYaw = math.atan2(dir.Z, dir.X)
-                            local currentYaw = math.atan2(camCF.LookVector.Z, camCF.LookVector.X)
-                            local newYaw = currentYaw + (targetYaw - currentYaw) * kakyocam
-                            local pitch = math.asin(camCF.LookVector.Y)
-                            local newLook = Vector3.new(
-                                math.cos(newYaw) * math.cos(pitch),
-                                math.sin(pitch),
-                                math.sin(newYaw) * math.cos(pitch)
-                            )
-                            cam.CFrame = CFrame.new(camPos, camPos + newLook)
-                        end
-                        if tick() - startTime >= 0.3 then
-                            connection:Disconnect()
-                        end
-                    end)
-                    notifyTech("Kakyo Tech")
-                end)
-            end
-        end
-
-        -- ========== INNER DASH ==========
-        if innerdash and UPPERCUT[anim.AnimationId] and not onCooldown then
-            local enemy = getClosestEnemy(10)
-            if enemy then
-                task.delay(adj(0.3), function()
-                    fireQ()
-                    local targetHRP = getRoot(enemy.Parent)
-                    if targetHRP then
-                        attachUnderTarget(enemy.Parent, 1)
-                        notifyTech("Inner Dash")
-                    end
-                end)
-            end
-        end
-
-        -- ========== INSTANT TWISTED ==========
-        if instanttwisted and animIdNumber == M4_ANIM_ID and not onCooldown then
-            local enemy = getClosestEnemy(12)
-            if enemy then
-                task.delay(adj(0.25), function()
-                    doTwisted()
-                    notifyTech("Instant Twisted")
-                end)
-            end
-        end
-
-        if leeinstanttwisted and animIdNumber == M4_ANIM_ID and not onCooldown then
-            task.delay(adj(waitpress), function()
-                fireQ()
-                task.wait(adj(leewait))
-                local cf = cam.CFrame
-                cam.CFrame = cf * CFrame.Angles(0, math.rad(turn), 0)
-                task.wait(adj(leewait2))
-                cam.CFrame = cam.CFrame * CFrame.Angles(0, math.rad(turn2), 0)
-                notifyTech("Lee Instant Twisted")
-            end)
-        end
-
-        -- ========== LETHAL VARIANTS ==========
-        if lethalEnabled and animIdNumber == TARGET_ANIM_ID then
-            task.spawn(function()
-                task.delay(adj(meowlethalstart), function()
-                    local enemy = getClosestEnemy(10)
-                    if enemy then
-                        fireQ()
-                        attachTo(enemy, 0.5, true)
-                        notifyTech("Meow + Lethal")
-                    end
-                end)
-            end)
-        end
-
-        if LethalDashEnabled and animIdNumber == TARGET_ANIM_ID then
-            task.spawn(function()
-                task.delay(adj(normallethalstart), function()
-                    forceJump()
-                    autoPressQ()
-                    task.delay(adj(secondforflip), flip)
-                    notifyTech("Lethal Dash")
-                end)
-            end)
-        end
-
-        if instantlethal and animIdNumber == TARGET_ANIM_ID and not onCooldown then
-            local enemy = getClosestEnemy(10)
-            if enemy then
-                task.delay(adj(instantlethalstart), function()
-                    autoPressQ()
-                    forceJump(60)
-                    notifyTech("Instant Lethal")
-                end)
-            end
-        end
-
-        if boomy and animIdNumber == TARGET_ANIM_ID then
-            local enemy = getClosestEnemy(10)
-            if enemy then
-                task.delay(adj(boomystart), function()
-                    autoPressQ()
-                    flip()
-                    forceJump(boomyjump)
-                    notifyTech("Boomy Instant Lethal")
-                end)
-            end
-        end
-
-        -- ========== AUTO KYOTO ==========
-        if AutoKyotoEnabled and animIdNumber == 12273188754 then
-            task.delay(adj(1.6), function()
-                local char = player.Character
-                local root = char and getRoot(char)
-                if root then
-                    safeKeyPress(Enum.KeyCode.Two)
-                    local look = root.CFrame.LookVector
-                    local horizontalLook = Vector3.new(look.X, 0, look.Z)
-                    if horizontalLook.Magnitude > 0 then
-                        horizontalLook = horizontalLook.Unit
-                    end
-                    root.CFrame = root.CFrame + horizontalLook * 22
-                    notifyTech("Auto Kyoto")
-                end
-            end)
-        end
-
-        if AutoKyototween and animIdNumber == 12273188754 then
-            task.delay(adj(1.6), function()
-                local char = player.Character
-                local root = char and getRoot(char)
-                if root then
-                    safeKeyPress(Enum.KeyCode.Two)
-                    local conn
-                    conn = RunService.Heartbeat:Connect(function()
-                        root.AssemblyLinearVelocity = root.CFrame.LookVector * 150
-                    end)
-                    task.delay(0.1, function()
-                        if conn then conn:Disconnect() end
-                    end)
-                    notifyTech("Auto Kyoto Tween")
-                end
-            end)
-        end
-
-        if AutoKyotoLegitEnabled and animIdNumber == 12273188754 then
-            task.delay(adj(1.6), function()
-                local char = player.Character
-                local root = char and getRoot(char)
-                if root then
-                    safeKeyPress(Enum.KeyCode.Two)
-                    root.CFrame = root.CFrame + (root.CFrame.LookVector * 30)
-                    notifyTech("Auto Kyoto Legit")
-                end
-            end)
-        end
-
-        -- ========== DEATH COUNTER ==========
-        if deathcounter and animIdNumber == 11343250001 then
-            local TELEPORT_DISTANCE = -10000
-            local root = getRoot(player.Character)
-            if root then
-                local originalCFrame = root.CFrame
-                local platform = Instance.new("Part")
-                platform.Size = Vector3.new(10, 1, 10)
-                platform.Anchored = true
-                platform.Transparency = 1
-                platform.CanCollide = true
-                platform.Position = root.Position + Vector3.new(0, TELEPORT_DISTANCE - 0.5, 0)
-                platform.Parent = workspace
-                root.CFrame = platform.CFrame + Vector3.new(0, 3, 0)
-
-                task.delay(6, function()
-                    if root and originalCFrame then
-                        root.CFrame = originalCFrame
-                    end
-                    if platform then platform:Destroy() end
-                    local camera = workspace.CurrentCamera
-                    local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-                    if hum then
-                        camera.CameraSubject = hum
-                        camera.CameraType = Enum.CameraType.Custom
-                    end
-                end)
-                notifyTech("Death Counter Bypass")
-            end
-        end
-    end)
-end
-
-player.CharacterAdded:Connect(setupCharacter)
-if player.Character then
-    setupCharacter(player.Character)
-end
-
--- ====================== UI: TECHS TOGGLES ======================
-Techs:Toggle({
-    Title = "Enable inner dash (100%)",
-    Icon = "cat",
-    Type = "Checkbox",
-    Value = false,
-    Callback = function(state) innerdash = state end
+-- Estados de techs
+local TechStates = {
+    meowtech = false,
+    kingtech = false,
+    oreotech = false,
+    kittytech = false,
+    kakyotech = false,
+    innertech = false,
+    instanttwisted = false,
+    lethal = false,
+    kyoto = false,
+    autokyoto = false
+}
+
+-- Configuraciones por defecto
+local TechSettings = {
+    meowtech = { startDelay = 0.3, duration = 0.3, dashDelay = 0.1, rotationSpeed = 90 },
+    kingtech = { startDelay = 0.3, waitTime = 0.2, dashDelay = 0.15, rotationSpeed = 90 },
+    oreotech = { startDelay = 0.3, waitTime = 0.5, camRotation = 1, jumpHeight = 54, dashDelay = 0.2 },
+    kittytech = { startJump = 0.1, startDelay = 0.3, waitTime = 0.1, camRotation = 1, duration = 0.2, dashDelay = 0.15 },
+    kakyotech = { startDelay = 0.3, jumpHeight = 40, camRotation = 4, dashDelay = 0.2, rotationSpeed = 90 },
+    innertech = { waitPress = 0.2, waitTime = 0.2, turn = -90, turn2 = 115, dashDelay = 0.2 },
+    instanttwisted = { startDelay = 1.7, waitTime = 0.5, dashDelay = 0.3 },
+    lethal = { startDelay = 1.7, jumpHeight = 65, camRotation = 3, dashDelay = 0.25, rotationSpeed = 90 }
+}
+
+--//═══════════════════════════════════════════════════════════════
+--//                    CREAR PESTAÑAS
+--//═══════════════════════════════════════════════════════════════
+
+-- Tab Principal
+local MainTab = Window:Tab({
+    Title = "🏠 Inicio",
+    Locked = false,
 })
 
-Techs:Toggle({
-    Title = "Enable MeowTech",
-    Icon = "cat",
-    Type = "Checkbox",
-    Value = false,
-    Callback = function(state) MeowTechEnabled = state end
+-- Tabs de Techs
+local MeowTechTab = Window:Tab({
+    Title = "😸 Meow Tech",
+    Locked = false,
 })
 
-Techs:Toggle({
-    Title = "Enable MeowTechv2",
-    Icon = "cat",
-    Type = "Checkbox",
-    Value = false,
-    Callback = function(state) meowtechv2 = state end
+local KingTechTab = Window:Tab({
+    Title = "👑 King Tech",
+    Locked = false,
 })
 
-Techs:Toggle({
-    Title = "Enable K1ng tech",
-    Type = "Checkbox",
-    Value = false,
-    Callback = function(state) KingTechEnabled = state end
+local OreoTechTab = Window:Tab({
+    Title = "🍪 Oreo Tech",
+    Locked = false,
 })
 
-Techs:Toggle({
-    Title = "Enable oreo tech",
-    Icon = "moon",
-    Type = "Checkbox",
-    Value = false,
-    Callback = function(state) dripz = state end
+local KittyTechTab = Window:Tab({
+    Title = "🐱 Kitty Tech",
+    Locked = false,
 })
 
-Techs:Toggle({
-    Title = "kitty dash",
-    Icon = "moon",
-    Type = "Checkbox",
-    Value = false,
-    Callback = function(state) oreov2 = state end
+local KakyoTechTab = Window:Tab({
+    Title = "⚫ Kakyo Tech",
+    Locked = false,
 })
 
-Techs:Toggle({
-    Title = "kakyo under flip(new)",
-    Icon = "moon",
-    Type = "Checkbox",
-    Value = false,
-    Callback = function(state) kakyo = state end
+local InnerTechTab = Window:Tab({
+    Title = "💨 Inner Dash",
+    Locked = false,
 })
 
-Techs:Toggle({
-    Title = "lee instant twisted",
-    Icon = "moon",
-    Type = "Checkbox",
-    Value = false,
-    Callback = function(state) leeinstanttwisted = state end
+local TwistedTab = Window:Tab({
+    Title = "🌀 Instant Twisted",
+    Locked = false,
 })
 
-Techs:Toggle({
-    Title = "Enable MeowTech + lethal",
-    Icon = "cat",
-    Type = "Checkbox",
-    Value = false,
-    Callback = function(state) lethalEnabled = state end
+local LethalTab = Window:Tab({
+    Title = "☠️ Lethal",
+    Locked = false,
 })
 
-Techs:Toggle({
-    Title = "LethalDash Enabled",
-    Icon = "moon",
-    Type = "Checkbox",
-    Value = false,
-    Callback = function(state) LethalDashEnabled = state end
+local KyotoTab = Window:Tab({
+    Title = "🔥 Kyoto",
+    Locked = false,
 })
 
-Techs:Toggle({
-    Title = "Instant lethal",
-    Icon = "moon",
-    Type = "Checkbox",
-    Value = false,
-    Callback = function(state) instantlethal = state end
+-- Tabs Utilitarios
+local UtilsTab = Window:Tab({
+    Title = "🛠️ Utilidades",
+    Locked = false,
 })
 
-Techs:Toggle({
-    Title = "booomy instant lethal",
-    Icon = "moon",
-    Type = "Checkbox",
-    Value = false,
-    Callback = function(state) boomy = state end
+local PerformanceTab = Window:Tab({
+    Title = "⚡ Rendimiento",
+    Locked = false,
 })
 
-Techs:Toggle({
-    Title = "inner lethal(90% headglide)",
-    Icon = "moon",
-    Type = "Checkbox",
-    Value = false,
-    Callback = function(state) innerlethal = state end
+local SettingsTab = Window:Tab({
+    Title = "⚙️ Ajustes",
+    Locked = false,
 })
 
--- ====================== SETTINGS / QoL TAB ======================
-settingsTab:Section({ Title = "Quality of Life" })
+MainTab:Select()
 
-settingsTab:Toggle({
-    Title = "Notify when Tech activates",
-    Desc = "Shows a notification every time a tech triggers",
-    Icon = "bell",
-    Type = "Checkbox",
-    Value = true,
-    Callback = function(state) NotifyOnTech = state end
+--//═══════════════════════════════════════════════════════════════
+--//                    TAB PRINCIPAL (INICIO)
+--//═══════════════════════════════════════════════════════════════
+
+MainTab:Section({
+    Text = "📊 Estado del Jugador"
 })
 
-settingsTab:Toggle({
-    Title = "Ping-based delay adjustment",
-    Desc = "Automatically adjusts delays according to your ping",
-    Icon = "activity",
-    Type = "Checkbox",
-    Value = true,
-    Callback = function(state) PingAdjustEnabled = state end
+MainTab:Label({
+    Text = "👤 Usuario: " .. player.Name,
+    Explode = false
 })
 
-settingsTab:Toggle({
-    Title = "Anti-AFK",
-    Desc = "Prevents being kicked for inactivity (keep OFF on mobile)",
-    Icon = "shield",
-    Type = "Checkbox",
-    Value = AntiAFKEnabled,
-    Callback = function(state) AntiAFKEnabled = state end
+MainTab:Label({
+    Text = "🆔 ID: " .. tostring(player.UserId),
+    Explode = false
 })
 
-settingsTab:Toggle({
-    Title = "Mobile Key Sim (for techs)",
-    Desc = "Needed for techs on mobile. May briefly affect touch buttons (auto-restores)",
-    Icon = "smartphone",
-    Type = "Checkbox",
-    Value = true,
-    Callback = function(state)
-        MobileKeySim = state
-    end
+MainTab:Label({
+    Text = "⚙️ Executor: " .. executor,
+    Explode = false
 })
 
-settingsTab:Button({
-    Title = "Fix Mobile Buttons",
-    Desc = "Try to restore M1 / block / dash touch buttons after death",
+MainTab:Label({
+    Text = "🎮 Lugar ID: " .. tostring(game.PlaceId),
+    Explode = false
+})
+
+MainTab:Section({
+    Text = "⚡ Estado General"
+})
+
+MainTab:Label({
+    Text = "Sistema: Mobile (Delta Executor)",
+    Explode = false
+})
+
+MainTab:Label({
+    Text = "Versión: 2.0 MEJORADO",
+    Explode = false
+})
+
+MainTab:Button({
+    Title = "🔄 Recargar Script",
+    Desc = "Reinicia todos los sistemas",
+    Locked = false,
     Callback = function()
-        restoreMobileControls()
-        pcall(function()
-            game:GetService("GuiService").SelectedObject = nil
-        end)
-        local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-        if hum then
-            pcall(function()
-                hum.PlatformStand = false
-                hum.AutoRotate = true
-                hum.Sit = false
-            end)
-        end
-        WindUI:Notify({
-            Title = "Mobile Fix",
-            Content = "Attempted to restore touch combat buttons",
-            Duration = 3,
-            Icon = "smartphone"
-        })
+        sendWebhook(
+            "🔄 Script Recargado",
+            "El usuario recargar el script",
+            65280, -- Verde
+            {
+                { name = "👤 Usuario", value = player.Name, inline = true },
+                { name = "⏰ Hora", value = os.date("%H:%M:%S"), inline = true }
+            }
+        )
+        WindUI:Notify({ Title = "✅ Listo", Content = "Script recargado", Duration = 2 })
     end
 })
 
-settingsTab:Button({
-    Title = "Disable ALL Techs",
-    Desc = "Turns off every combat macro at once",
+MainTab:Button({
+    Title = "📤 Enviar Info a Discord",
+    Desc = "Notifica al servidor tu actividad",
+    Locked = false,
     Callback = function()
-        MeowTechEnabled = false
-        meowtechv2 = false
-        KingTechEnabled = false
-        dripz = false
-        oreov2 = false
-        kakyo = false
-        leeinstanttwisted = false
-        lethalEnabled = false
-        LethalDashEnabled = false
-        instantlethal = false
-        boomy = false
-        innerlethal = false
-        innerdash = false
-        kyokiedash = false
-        AutoKyotoEnabled = false
-        AutoKyototween = false
-        AutoKyotoLegitEnabled = false
-        lunarextender = false
-        instanttwisted = false
-
-        WindUI:Notify({
-            Title = "All Techs Disabled",
-            Content = "Every combat macro has been turned off",
-            Duration = 3,
-            Icon = "power"
-        })
+        sendWebhook(
+            "👋 Ejecutor Conectado",
+            "Se conectó un nuevo usuario al sistema",
+            3447003, -- Azul
+            {
+                { name = "👤 Usuario", value = player.Name, inline = true },
+                { name = "🆔 ID", value = tostring(player.UserId), inline = true },
+                { name = "⚙️ Executor", value = executor, inline = true },
+                { name = "🌐 Ubicación", value = "Jugando en " .. game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name, inline = false }
+            }
+        )
+        WindUI:Notify({ Title = "✅ Enviado", Content = "Información enviada a Discord", Duration = 2 })
     end
 })
 
-settingsTab:Divider()
+--//═══════════════════════════════════════════════════════════════
+--//           FUNCIÓN AUXILIAR PARA CREAR TAB DE TECH
+--//═══════════════════════════════════════════════════════════════
 
-settingsTab:Section({ Title = "Info" })
-settingsTab:Paragraph({
-    Title = "Current Ping",
-    Desc = function()
-        return string.format("%.0f ms", getPing())
-    end
-})
+local function CreateTechTab(TabObj, TechName, DefaultSettings)
+    TabObj:Section({
+        Text = "⚡ Control Principal"
+    })
 
--- ====================== MEOW SETTINGS ======================
-meowtech:Input({
-    Title = "Start Time",
-    Desc = "how long until the tech starts",
-    Value = "0.3",
-    Type = "Input",
-    Placeholder = "Enter a number",
-    Callback = function(input) meowstart = tonumber(input) or 0.3 end
-})
-
-meowtech:Input({
-    Title = "duration",
-    Desc = "how long the attach lasts",
-    Value = "0.3",
-    Type = "Input",
-    Placeholder = "Enter a number",
-    Callback = function(input) meowDuration = tonumber(input) or 0.3 end
-})
-
--- ====================== KING SETTINGS ======================
-k1ngtech:Input({
-    Title = "Start Time",
-    Value = "0.3",
-    Type = "Input",
-    Placeholder = "Enter a number",
-    Callback = function(input) kingstart = tonumber(input) or 0.3 end
-})
-
-k1ngtech:Input({
-    Title = "Flip Time",
-    Value = "0.2",
-    Type = "Input",
-    Placeholder = "Enter a number",
-    Callback = function(input) kingwait = tonumber(input) or 0.2 end
-})
-
--- ====================== OREO SETTINGS ======================
-oreo:Input({
-    Title = "Start Time",
-    Value = "0.3",
-    Type = "Input",
-    Callback = function(input) oreostart = tonumber(input) or 0.3 end
-})
-
-oreo:Input({
-    Title = "Rotation time",
-    Value = "0.5",
-    Type = "Input",
-    Callback = function(input) oreowait = tonumber(input) or 0.5 end
-})
-
-oreo:Input({
-    Title = "camera speed",
-    Value = "1",
-    Type = "Input",
-    Callback = function(input) oreocam = tonumber(input) or 1 end
-})
-
-oreo:Input({
-    Title = "Jump height",
-    Value = "54",
-    Type = "Input",
-    Callback = function(input) oreojump = tonumber(input) or 54 end
-})
-
--- ====================== KITTY SETTINGS ======================
-kitty:Input({
-    Title = "kitty jump",
-    Value = "0.1",
-    Type = "Input",
-    Callback = function(input) kittystartjump = tonumber(input) or 0.1 end
-})
-
-kitty:Input({
-    Title = "Start Time",
-    Value = "0.3",
-    Type = "Input",
-    Callback = function(input) kittystart = tonumber(input) or 0.3 end
-})
-
-kitty:Input({
-    Title = "Rotate Time",
-    Value = "0.1",
-    Type = "Input",
-    Callback = function(input) kittywait = tonumber(input) or 0.1 end
-})
-
-kitty:Input({
-    Title = "camera speed",
-    Value = "1",
-    Type = "Input",
-    Callback = function(input) kittycam = tonumber(input) or 1 end
-})
-
--- ====================== KAKYO SETTINGS ======================
-kak:Input({
-    Title = "Start Time",
-    Value = "0.3",
-    Type = "Input",
-    Callback = function(input) kakyostart = tonumber(input) or 0.3 end
-})
-
-kak:Input({
-    Title = "kakyo jump height",
-    Value = "40",
-    Type = "Input",
-    Callback = function(input) kakyojump = tonumber(input) or 40 end
-})
-
-kak:Input({
-    Title = "camera speed",
-    Value = "4",
-    Type = "Input",
-    Callback = function(input) kakyocam = tonumber(input) or 4 end
-})
-
--- ====================== INSTANT TWISTED SETTINGS ======================
-instanttwis:Input({
-    Title = "press Q Time",
-    Value = "0.2",
-    Type = "Input",
-    Callback = function(input) waitpress = tonumber(input) or 0.2 end
-})
-
-instanttwis:Input({
-    Title = "wait",
-    Value = "0.1",
-    Type = "Input",
-    Callback = function(input) leewait = tonumber(input) or 0.1 end
-})
-
-instanttwis:Input({
-    Title = "rotate Degree",
-    Value = "-90",
-    Type = "Input",
-    Callback = function(input) turn = tonumber(input) or -90 end
-})
-
-instanttwis:Input({
-    Title = "wait2",
-    Value = "0.05",
-    Type = "Input",
-    Callback = function(input) leewait2 = tonumber(input) or 0.05 end
-})
-
-instanttwis:Input({
-    Title = "rotate Degree 2",
-    Value = "110",
-    Type = "Input",
-    Callback = function(input) turn2 = tonumber(input) or 110 end
-})
-
--- ====================== LETHAL SETTINGS ======================
-lethal:Input({
-    Title = "Start Time (meowtech + lethal)",
-    Value = "1.7",
-    Type = "Input",
-    Callback = function(input) meowlethalstart = tonumber(input) or 1.7 end
-})
-
-lethal:Divider()
-
-lethal:Input({
-    Title = "Start Time (lethal Dash)",
-    Value = "1.7",
-    Type = "Input",
-    Callback = function(input) normallethalstart = tonumber(input) or 1.7 end
-})
-
-lethal:Input({
-    Title = "Flip Time",
-    Value = "0.2",
-    Type = "Input",
-    Callback = function(input) secondforflip = tonumber(input) or 0.2 end
-})
-
-lethal:Divider()
-
-lethal:Input({
-    Title = "Start Time (instant Lethal)",
-    Value = "1.7",
-    Type = "Input",
-    Callback = function(input) instantlethalstart = tonumber(input) or 1.7 end
-})
-
-lethal:Input({
-    Title = "Rotate Time",
-    Value = "0.5",
-    Type = "Input",
-    Callback = function(input) instantlethalwait = tonumber(input) or 0.5 end
-})
-
-lethal:Divider()
-
-lethal:Input({
-    Title = "Start Time (Boomy)",
-    Value = "1.7",
-    Type = "Input",
-    Callback = function(input) boomystart = tonumber(input) or 1.7 end
-})
-
-lethal:Input({
-    Title = "Jump Height",
-    Value = "60",
-    Type = "Input",
-    Callback = function(input) boomyjump = tonumber(input) or 60 end
-})
-
--- ====================== KYOTO ======================
-tech:Toggle({
-    Title = "Auto Kyoto",
-    Icon = "moon",
-    Type = "Checkbox",
-    Value = false,
-    Callback = function(state) AutoKyotoEnabled = state end
-})
-
-tech:Toggle({
-    Title = "Auto Kyoto tween mode",
-    Icon = "moon",
-    Type = "Checkbox",
-    Value = false,
-    Callback = function(state) AutoKyototween = state end
-})
-
-tech:Toggle({
-    Title = "Auto Kyoto Legit",
-    Icon = "moon",
-    Type = "Checkbox",
-    Value = false,
-    Callback = function(state) AutoKyotoLegitEnabled = state end
-})
-
--- ====================== SOCIAL ======================
-plat:Button({
-    Title = "Copy Discord Link",
-    Callback = function()
-        if setclipboard then
-            setclipboard("https://discord.gg/n7rjmS4sNp")
-            WindUI:Notify({ Title = "Copied", Content = "Discord link copied", Duration = 3 })
-        end
-    end
-})
-
-plat:Button({
-    Title = "Copy youtube Link",
-    Callback = function()
-        if setclipboard then
-            setclipboard("http://youtube.com/@kyokiee")
-            WindUI:Notify({ Title = "Copied", Content = "YouTube link copied", Duration = 3 })
-        end
-    end
-})
-
-plat:Button({
-    Title = "Copy tiktok Link",
-    Callback = function()
-        if setclipboard then
-            setclipboard("http://tiktok.com/@kyokieut")
-            WindUI:Notify({ Title = "Copied", Content = "TikTok link copied", Duration = 3 })
-        end
-    end
-})
-
--- ====================== MAIN TAB ======================
-main:Toggle({
-    Title = "Enable WalkSpeed",
-    Desc = "also makes you no stun",
-    Icon = "cat",
-    Type = "Checkbox",
-    Value = false,
-    Callback = function(state)
-        WalkSpeedEnabled = state
-        local character = player.Character
-        if character then
-            local humanoid = character:FindFirstChild("Humanoid")
-            if humanoid then
-                humanoid.WalkSpeed = state and walkSpeedValue or 23
-            end
-        end
-    end
-})
-
-main:Slider({
-    Title = "WalkSpeed",
-    Step = 1,
-    Value = { Min = 0, Max = 1000, Default = 23 },
-    Callback = function(value)
-        walkSpeedValue = value
-        if WalkSpeedEnabled then
-            local character = player.Character
-            if character then
-                local humanoid = character:FindFirstChild("Humanoid")
-                if humanoid then
-                    humanoid.WalkSpeed = value
-                end
-            end
-        end
-    end
-})
-
-main:Toggle({
-    Title = "touch fling",
-    Desc = "fling other player when touch",
-    Icon = "bird",
-    Type = "Checkbox",
-    Value = false,
-    Callback = function(v) hiddenfling = v end
-})
-
-main:Toggle({
-    Title = "No Dash Cooldown (new)",
-    Desc = "Toggle to remove dash cooldown",
-    Icon = "bird",
-    Type = "Checkbox",
-    Value = false,
-    Callback = function(state)
-        workspace:SetAttribute("NoDashCooldown", state)
-        if state then
-            workspace:SetAttribute("EffectAffects", 1)
-        end
-    end
-})
-
-main:Toggle({
-    Title = "anti death counter",
-    Desc = "make u not die in deathcounter",
-    Icon = "bird",
-    Type = "Checkbox",
-    Value = false,
-    Callback = function(v) deathcounter = v end
-})
-
--- Enforce WalkSpeed
-RunService.RenderStepped:Connect(function()
-    if not WalkSpeedEnabled then return end
-    local character = player.Character
-    if character then
-        local humanoid = character:FindFirstChild("Humanoid")
-        if humanoid and humanoid.WalkSpeed ~= walkSpeedValue then
-            humanoid.WalkSpeed = walkSpeedValue
-        end
-    end
-end)
-
-player.CharacterAdded:Connect(function(char)
-    local humanoid = char:WaitForChild("Humanoid")
-    if WalkSpeedEnabled then
-        humanoid.WalkSpeed = walkSpeedValue
-    end
-end)
-
--- ====================== TELEPORT ======================
-local playerButtons = {}
-
-local function teleportToPlayer(targetPlayer)
-    if player.Character and targetPlayer.Character then
-        local myRoot = getRoot(player.Character)
-        local targetRoot = getRoot(targetPlayer.Character)
-        if myRoot and targetRoot then
-            myRoot.CFrame = targetRoot.CFrame + Vector3.new(0, 0, 3)
-        end
-    end
-end
-
-local function addPlayerButton(plr)
-    if plr == player then return end
-    local button = tp:Button({
-        Title = plr.Name,
-        Desc = "Teleport to " .. plr.Name,
-        Callback = function()
-            teleportToPlayer(plr)
+    local TechToggle = TabObj:Toggle({
+        Title = "Activar " .. TechName,
+        Desc = "Activa/desactiva esta técnica",
+        Icon = "zap",
+        Type = "Checkbox",
+        Value = false,
+        Callback = function(state)
+            TechStates[TechName] = state
+            sendWebhook(
+                "⚡ " .. TechName:upper() .. " " .. (state and "ACTIVADO" or "DESACTIVADO"),
+                (state and "✅ " or "❌ ") .. TechName .. " está ahora " .. (state and "activo" or "inactivo"),
+                state and 65280 or 16711680,
+                {
+                    { name = "👤 Usuario", value = player.Name, inline = true },
+                    { name = "📊 Estado", value = state and "✅ Activo" or "❌ Inactivo", inline = true },
+                    { name = "⏰ Hora", value = os.date("%H:%M:%S"), inline = true }
+                }
+            )
         end
     })
-    playerButtons[plr] = button
-end
 
-for _, plr in ipairs(Players:GetPlayers()) do
-    addPlayerButton(plr)
-end
-
-Players.PlayerAdded:Connect(addPlayerButton)
-Players.PlayerRemoving:Connect(function(plr)
-    playerButtons[plr] = nil
-end)
-
--- ====================== COUNTER ESP ======================
-local highlights = {}
-local connections = {}
-local espEnabled = false
-
-local function addHighlight(character)
-    if highlights[character] then return end
-    local h = Instance.new("Highlight")
-    h.Name = "CounterHighlight"
-    h.FillColor = Color3.fromRGB(255, 0, 0)
-    h.OutlineColor = Color3.fromRGB(255, 0, 0)
-    h.FillTransparency = 0.45
-    h.OutlineTransparency = 0
-    h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-    h.Adornee = character
-    h.Parent = character
-    highlights[character] = h
-end
-
-local function removeHighlight(character)
-    if highlights[character] then
-        highlights[character]:Destroy()
-        highlights[character] = nil
-    end
-end
-
-local function clearAllHighlights()
-    for char, _ in pairs(highlights) do
-        removeHighlight(char)
-    end
-end
-
-local function hasCounterAccessory(character)
-    for _, acc in ipairs(character:GetChildren()) do
-        if acc:IsA("Accessory") and acc.Name == "Counter" then
-            return true
-        end
-    end
-    return false
-end
-
-local function setupCharacterWatch(character)
-    if connections[character] then
-        for _, conn in pairs(connections[character]) do
-            conn:Disconnect()
-        end
-    end
-    connections[character] = {}
-
-    if hasCounterAccessory(character) then
-        addHighlight(character)
-    end
-
-    connections[character].added = character.ChildAdded:Connect(function(child)
-        if child:IsA("Accessory") and child.Name == "Counter" then
-            addHighlight(character)
-        end
-    end)
-
-    connections[character].removed = character.ChildRemoved:Connect(function(child)
-        if child:IsA("Accessory") and child.Name == "Counter" then
-            removeHighlight(character)
-        end
-    end)
-end
-
-local function cleanupCharacterWatch(character)
-    removeHighlight(character)
-    if connections[character] then
-        for _, conn in pairs(connections[character]) do
-            conn:Disconnect()
-        end
-        connections[character] = nil
-    end
-end
-
-local function enableESP()
-    espEnabled = true
-    for _, plr in ipairs(Players:GetPlayers()) do
-        if plr ~= player and plr.Character then
-            setupCharacterWatch(plr.Character)
-        end
-    end
-end
-
-local function disableESP()
-    espEnabled = false
-    clearAllHighlights()
-    for character, _ in pairs(connections) do
-        if connections[character] then
-            for _, conn in pairs(connections[character]) do
-                conn:Disconnect()
+    local Keybind = TabObj:Keybind({
+        Title = "Tecla de Activación",
+        Desc = "Presiona para activar rápidamente",
+        Value = "E",
+        Callback = function()
+            if TechStates[TechName] then
+                sendWebhook(
+                    "⚡ " .. TechName .. " Usado",
+                    "El usuario utilizó la técnica " .. TechName,
+                    3447003,
+                    {
+                        { name = "👤 Usuario", value = player.Name, inline = true },
+                        { name = "🎯 Técnica", value = TechName, inline = true },
+                        { name = "⏰ Hora", value = os.date("%H:%M:%S"), inline = true }
+                    }
+                )
             end
         end
+    })
+
+    TabObj:Section({
+        Text = "⚙️ Configuración de Delays"
+    })
+
+    TabObj:Slider({
+        Title = "Delay Inicial",
+        Desc = "Tiempo antes de activar (0.0 - 2.0s)",
+        Min = 0,
+        Max = 2,
+        Default = DefaultSettings.startDelay or 0.3,
+        Round = 2,
+        Callback = function(value)
+            DefaultSettings.startDelay = value
+        end
+    })
+
+    if DefaultSettings.duration then
+        TabObj:Slider({
+            Title = "Duración",
+            Desc = "Tiempo de ejecución (0.1 - 1.0s)",
+            Min = 0.1,
+            Max = 1,
+            Default = DefaultSettings.duration,
+            Round = 2,
+            Callback = function(value)
+                DefaultSettings.duration = value
+            end
+        })
     end
-    connections = {}
-end
 
-local function onPlayerAdded(plr)
-    if plr == player then return end
-    if plr.Character and espEnabled then
-        setupCharacterWatch(plr.Character)
+    if DefaultSettings.dashDelay then
+        TabObj:Slider({
+            Title = "Delay de Dash",
+            Desc = "Retraso de activación (0.1 - 0.5s)",
+            Min = 0.1,
+            Max = 0.5,
+            Default = DefaultSettings.dashDelay,
+            Round = 2,
+            Callback = function(value)
+                DefaultSettings.dashDelay = value
+            end
+        })
     end
-    plr.CharacterAdded:Connect(function(char)
-        if espEnabled then setupCharacterWatch(char) end
-    end)
-    plr.CharacterRemoving:Connect(cleanupCharacterWatch)
+
+    if DefaultSettings.waitTime then
+        TabObj:Slider({
+            Title = "Tiempo de Espera",
+            Desc = "Espera entre acciones (0.0 - 1.0s)",
+            Min = 0,
+            Max = 1,
+            Default = DefaultSettings.waitTime,
+            Round = 2,
+            Callback = function(value)
+                DefaultSettings.waitTime = value
+            end
+        })
+    end
+
+    TabObj:Section({
+        Text = "🎯 Configuración de Rotación"
+    })
+
+    if DefaultSettings.rotationSpeed then
+        TabObj:Slider({
+            Title = "Velocidad de Rotación",
+            Desc = "Rotación de cámara (0 - 360°)",
+            Min = 0,
+            Max = 360,
+            Default = DefaultSettings.rotationSpeed,
+            Round = 0,
+            Callback = function(value)
+                DefaultSettings.rotationSpeed = value
+            end
+        })
+    end
+
+    if DefaultSettings.camRotation then
+        TabObj:Slider({
+            Title = "Rotación de Cámara",
+            Desc = "Giro de cámara (0 - 10)",
+            Min = 0,
+            Max = 10,
+            Default = DefaultSettings.camRotation,
+            Round = 1,
+            Callback = function(value)
+                DefaultSettings.camRotation = value
+            end
+        })
+    end
+
+    TabObj:Section({
+        Text = "📊 Valores Avanzados"
+    })
+
+    if DefaultSettings.jumpHeight then
+        TabObj:Slider({
+            Title = "Altura de Salto",
+            Desc = "Fuerza del salto (0 - 100)",
+            Min = 0,
+            Max = 100,
+            Default = DefaultSettings.jumpHeight,
+            Round = 0,
+            Callback = function(value)
+                DefaultSettings.jumpHeight = value
+            end
+        })
+    end
+
+    TabObj:Button({
+        Title = "🔄 Resetear Configuración",
+        Desc = "Vuelve a los valores por defecto",
+        Locked = false,
+        Callback = function()
+            for key, value in pairs(TechSettings[TechName]) do
+                DefaultSettings[key] = value
+            end
+            WindUI:Notify({ Title = "✅ Configuración", Content = "Valores restablecidos", Duration = 2 })
+        end
+    })
 end
 
-for _, plr in ipairs(Players:GetPlayers()) do
-    onPlayerAdded(plr)
-end
-Players.PlayerAdded:Connect(onPlayerAdded)
+--//═══════════════════════════════════════════════════════════════
+--//                    CREAR TODOS LOS TABS DE TECHS
+--//═══════════════════════════════════════════════════════════════
 
-esp:Toggle({
-    Title = "Counter ESP",
-    Desc = "Highlights players with death counter",
-    Icon = "crosshair",
+CreateTechTab(MeowTechTab, "meowtech", TechSettings.meowtech)
+CreateTechTab(KingTechTab, "kingtech", TechSettings.kingtech)
+CreateTechTab(OreoTechTab, "oreotech", TechSettings.oreotech)
+CreateTechTab(KittyTechTab, "kittytech", TechSettings.kittytech)
+CreateTechTab(KakyoTechTab, "kakyotech", TechSettings.kakyotech)
+CreateTechTab(InnerTechTab, "innertech", TechSettings.innertech)
+CreateTechTab(TwistedTab, "instanttwisted", TechSettings.instanttwisted)
+CreateTechTab(LethalTab, "lethal", TechSettings.lethal)
+
+KyotoTab:Section({
+    Text = "⚡ Control Principal"
+})
+
+KyotoTab:Toggle({
+    Title = "Activar Kyoto",
+    Desc = "Técnica especial de fuego",
+    Icon = "zap",
     Type = "Checkbox",
     Value = false,
     Callback = function(state)
-        if state then enableESP() else disableESP() end
+        TechStates.kyoto = state
+        sendWebhook(
+            "🔥 KYOTO " .. (state and "ACTIVADO" or "DESACTIVADO"),
+            (state and "✅ " or "❌ ") .. "Kyoto está ahora " .. (state and "activo" or "inactivo"),
+            state and 16776960 or 16711680,
+            {
+                { name = "👤 Usuario", value = player.Name, inline = true },
+                { name = "📊 Estado", value = state and "✅ Activo" or "❌ Inactivo", inline = true }
+            }
+        )
     end
 })
 
--- ====================== M1 RESET ======================
-local debounce = false
-local dashDuration = 0.2
-local dashforce = 150
-local m1resetGui = nil
-local m1resetEnabled = false -- track toggle state across respawns
-
-local function triggerDash()
-    if debounce then return end
-    local char = player.Character
-    if not char then return end
-    local root = getRoot(char)
-    local humanoid = char:FindFirstChild("Humanoid")
-    if not root or not humanoid or humanoid.Health <= 0 then return end
-
-    debounce = true
-
-    local disabled = {}
-    for _, v in ipairs(root:GetChildren()) do
-        if v:IsA("BodyVelocity") and v.Name ~= "moveme" then
-            disabled[v] = v.MaxForce
-            v.MaxForce = Vector3.zero
-        end
-    end
-
-    local connect = RunService.Heartbeat:Connect(function()
-        if root and root.Parent then
-            root.AssemblyLinearVelocity = root.CFrame.RightVector * dashforce
-        end
-    end)
-
-    local originalCamCF = cam.CFrame
-    cam.CFrame = originalCamCF * CFrame.Angles(0, math.rad(-90), 0)
-
-    task.wait(dashDuration)
-
-    fireQ()
-    if root and root.Parent then
-        root.AssemblyLinearVelocity = Vector3.zero
-    end
-    cam.CFrame = originalCamCF
-
-    if connect then connect:Disconnect() end
-
-    for bv, maxForce in pairs(disabled) do
-        if bv and bv.Parent then
-            bv.MaxForce = maxForce
-        end
-    end
-
-    debounce = false
-end
-
-local function createM1ResetGui()
-    -- Destroy old one if it exists
-    if m1resetGui and m1resetGui.Parent then
-        m1resetGui:Destroy()
-    end
-    m1resetGui = nil
-
-    local pg = player:FindFirstChild("PlayerGui") or player:WaitForChild("PlayerGui", 5)
-    if not pg then return end
-
-    m1resetGui = Instance.new("ScreenGui")
-    m1resetGui.Name = "m1reset"
-    m1resetGui.ResetOnSpawn = false
-    m1resetGui.IgnoreGuiInset = true
-    -- Low DisplayOrder so it does NOT cover game combat buttons (M1/block/dash)
-    m1resetGui.DisplayOrder = 5
-    m1resetGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    m1resetGui.Parent = pg
-
-    local dashframe = Instance.new("Frame")
-    dashframe.Name = "dashframe"
-    dashframe.Parent = m1resetGui
-    dashframe.BackgroundTransparency = 1
-    dashframe.Size = UDim2.new(0, 100, 0, 110)
-    -- Bottom-left corner — avoids covering center/bottom combat buttons
-    dashframe.Position = UDim2.new(0, 20, 1, -130)
-    dashframe.Active = true
-    dashframe.Draggable = true
-
-    local cat = Instance.new("ImageButton")
-    cat.Name = "cat"
-    cat.Parent = dashframe
-    cat.BackgroundTransparency = 1
-    cat.Position = UDim2.new(0.1, 0, 0.2, 0)
-    cat.Size = UDim2.new(0, 79, 0, 72)
-    cat.Image = "rbxassetid://124624838814157"
-    cat.Active = true
-    cat.Activated:Connect(triggerDash)
-
-    local idk = Instance.new("TextLabel")
-    idk.Name = "idk"
-    idk.Parent = dashframe
-    idk.BackgroundTransparency = 0
-    idk.Position = UDim2.new(0.1, 0, 0.05, 0)
-    idk.Size = UDim2.new(0, 79, 0, 18)
-    idk.Font = Enum.Font.SourceSans
-    idk.Text = "drag"
-    idk.TextColor3 = Color3.new(0, 0, 0)
-    idk.TextSize = 14
-    idk.Active = false -- label should not sink clicks
-end
-
-local function destroyM1ResetGui()
-    if m1resetGui then
-        pcall(function() m1resetGui:Destroy() end)
-        m1resetGui = nil
-    end
-end
-
-M1reset:Keybind({
-    Title = "Dash Key",
-    Desc = "Key to trigger dash",
-    Value = "E",
+KyotoTab:Keybind({
+    Title = "Tecla de Activación",
+    Desc = "Atajo rápido",
+    Value = "R",
     Callback = function()
-        if m1resetEnabled then
-            triggerDash()
+        if TechStates.kyoto then
+            WindUI:Notify({ Title = "🔥 Kyoto", Content = "Técnica activada!", Duration = 1 })
         end
     end
 })
 
-M1reset:Toggle({
-    Title = "M1Reset GUI",
-    Desc = "Toggle dash GUI",
-    Icon = "bird",
-    Type = "Checkbox",
-    Value = false,
-    Callback = function(state)
-        m1resetEnabled = state
-        if state then
-            createM1ResetGui()
-        else
-            destroyM1ResetGui()
-        end
-    end
+--//═══════════════════════════════════════════════════════════════
+--//                    TAB UTILIDADES
+--//═══════════════════════════════════════════════════════════════
+
+UtilsTab:Section({
+    Text = "📱 Herramientas Especiales"
 })
 
-M1reset:Input({
-    Title = "duration",
-    Value = "0.2",
-    Type = "Input",
-    Callback = function(input)
-        local num = tonumber(input)
-        if num then dashDuration = num end
-    end
-})
-
-M1reset:Input({
-    Title = "dash force",
-    Value = "150",
-    Type = "Input",
-    Callback = function(input)
-        local num = tonumber(input)
-        if num then dashforce = num end
-    end
-})
-
--- ====================== FIX: COMBAT BUTTONS AFTER DEATH ======================
--- Symptom: after respawn, game M1/block/dash stop receiving clicks, but chat,
--- settings and ability buttons still work → usually an invisible Active frame
--- covering the viewport, or stuck GUI focus / humanoid state.
-local GuiService = game:GetService("GuiService")
-
--- Disable Active on large transparent frames that can eat world/combat clicks
--- (does not touch small buttons or the hub when it is intentionally open)
-local function releaseInputBlockers()
-    local pg = player:FindFirstChild("PlayerGui")
-    if not pg then return end
-
-    for _, gui in ipairs(pg:GetChildren()) do
-        if gui:IsA("ScreenGui") then
-            local gname = string.lower(gui.Name)
-            -- Never strip the game's own combat UI
-            local isGameCombat = gname:find("combat") or gname:find("hotbar") or gname:find("ability")
-                or gname:find("skill") or gname:find("mobile") or gname:find("touch")
-
-            if not isGameCombat then
-                for _, desc in ipairs(gui:GetDescendants()) do
-                    if desc:IsA("Frame") or desc:IsA("TextButton") or desc:IsA("ImageButton") then
-                        local size = desc.AbsoluteSize
-                        -- Large transparent active frames can block combat / world clicks
-                        if size.X > 300 and size.Y > 300 then
-                            local bg = desc.BackgroundTransparency
-                            if typeof(bg) == "number" and bg >= 0.95 and desc.Active then
-                                local dname = string.lower(desc.Name)
-                                if dname:find("overlay") or dname:find("modal") or dname:find("sink")
-                                    or dname:find("blocker") or dname:find("capture")
-                                    or dname == "frame" or dname == "" then
-                                    desc.Active = false
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-end
-
-local function hardResetCombatState(char)
-    attached = false
-    isAttaching = false
-    attachCooldown = false
-    didUppercut = false
-    onCooldown = false
-
-    if followConnection then
-        followConnection:Disconnect()
-        followConnection = nil
-    end
-    if attachConnection then
-        attachConnection:Disconnect()
-        attachConnection = nil
-    end
-
-    local humanoid = char and char:FindFirstChildOfClass("Humanoid")
-    if humanoid then
-        pcall(function()
-            humanoid.PlatformStand = false
-            humanoid.AutoRotate = true
-            humanoid.Sit = false
-        end)
-    end
-
-    pcall(function()
-        GuiService.SelectedObject = nil
-        UserInputService.MouseIconEnabled = true
-    end)
-
-    -- Release any key that VirtualInputManager might have left pressed (PC only)
-    if not isMobile then
-        pcall(function()
-            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Q, false, game)
-            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
-            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Two, false, game)
-            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.LeftShift, false, game)
-        end)
-    end
-
-    -- Critical on mobile: try to bring combat touch buttons back
-    restoreMobileControls()
-end
-
-local function onCharacterRespawned(char)
-    task.spawn(function()
-        local humanoid = char:WaitForChild("Humanoid", 10)
-        char:WaitForChild("HumanoidRootPart", 10)
-
-        -- Wait for the game to rebuild its combat UI
-        task.wait(0.5)
-        hardResetCombatState(char)
-
-        task.wait(0.8)
-
-        -- Clear focus again after game UI is ready
-        pcall(function()
-            GuiService.SelectedObject = nil
-        end)
-
-        -- Neutralize invisible full-screen input sinks (without touching game combat UI)
-        pcall(releaseInputBlockers)
-
-        -- Keep our GUIs from resetting on next death (no DisplayOrder changes)
-        protectWindUIGuis()
-
-        -- Only recreate M1 GUI if user had it on (bottom-left, low order)
-        if m1resetEnabled then
-            if not m1resetGui or not m1resetGui.Parent then
-                createM1ResetGui()
-            end
-        end
-
-        cam = workspace.CurrentCamera
-        hrp = getRoot(char)
-
-        -- Re-bind toggle key only (do NOT re-create open button every death —
-        -- that was suspected of leaving an input-blocking overlay)
-        pcall(function()
-            Window:SetToggleKey(Enum.KeyCode.K)
-        end)
-    end)
-end
-
-player.CharacterAdded:Connect(onCharacterRespawned)
-
-player:WaitForChild("PlayerGui").ChildAdded:Connect(function(child)
-    if child:IsA("ScreenGui") then
-        local name = string.lower(child.Name)
-        if name:find("wind") or name:find("lunar") or name:find("hub") or name == "m1reset" then
-            task.defer(function()
-                pcall(function() child.ResetOnSpawn = false end)
-            end)
-        end
-    end
-end)
-
--- ====================== REDUCE LAG ======================
-reduce:Button({
-    Title = "potato graphics",
-    Desc = "no texture",
+UtilsTab:Button({
+    Title = "🎮 Teleport al Centro",
+    Desc = "Te lleva al centro del mapa",
+    Locked = false,
     Callback = function()
+        if hrp then
+            hrp.CFrame = CFrame.new(0, 10, 0)
+            sendWebhook(
+                "📍 Teleportado",
+                "Usuario teletransportado al centro",
+                3447003,
+                {
+                    { name = "👤 Usuario", value = player.Name, inline = true },
+                    { name = "📍 Ubicación", value = "Centro del mapa", inline = true }
+                }
+            )
+            WindUI:Notify({ Title = "✅ Teleport", Content = "¡Teletransportado!", Duration = 2 })
+        end
+    end
+})
+
+UtilsTab:Button({
+    Title = "🔊 Usar Micrófono",
+    Desc = "Emite un sonido",
+    Locked = false,
+    Callback = function()
+        WindUI:Notify({ Title = "🔊 Audio", Content = "Reproductor de audio activado", Duration = 2 })
+    end
+})
+
+UtilsTab:Button({
+    Title = "🎯 Buscar Jugadores",
+    Desc = "Lista de jugadores en el servidor",
+    Locked = false,
+    Callback = function()
+        local playerList = ""
+        for _, p in pairs(Players:GetPlayers()) do
+            playerList = playerList .. p.Name .. ", "
+        end
+        WindUI:Notify({ Title = "👥 Jugadores", Content = playerList, Duration = 3 })
+    end
+})
+
+--//═══════════════════════════════════════════════════════════════
+--//                 TAB RENDIMIENTO
+--//═══════════════════════════════════════════════════════════════
+
+PerformanceTab:Section({
+    Text = "📉 Optimización de Gráficos"
+})
+
+PerformanceTab:Button({
+    Title = "🥔 Gráficos Mínimos",
+    Desc = "Modo patata - Sin texturas",
+    Locked = false,
+    Callback = function()
+        local Workspace = game:GetService("Workspace")
+
         local function RemoveTextures(inst)
             for _, child in ipairs(inst:GetChildren()) do
                 if child:IsA("Decal") or child:IsA("Texture") or child:IsA("SurfaceAppearance") then
                     child:Destroy()
                 end
             end
+
             if inst:IsA("MeshPart") then
                 inst.TextureID = ""
                 inst.Material = Enum.Material.SmoothPlastic
@@ -2169,23 +660,47 @@ reduce:Button({
             end
         end
 
-        for _, inst in ipairs(workspace:GetDescendants()) do
+        for _, inst in ipairs(Workspace:GetDescendants()) do
             RemoveTextures(inst)
         end
 
-        workspace.DescendantAdded:Connect(RemoveTextures)
-        WindUI:Notify({ Title = "Done", Content = "Textures removed", Duration = 3 })
+        Workspace.DescendantAdded:Connect(function(inst)
+            RemoveTextures(inst)
+        end)
+
+        sendWebhook(
+            "🥔 Modo Patata Activado",
+            "Gráficos minimizados para mejor rendimiento",
+            65280,
+            {
+                { name = "👤 Usuario", value = player.Name, inline = true },
+                { name = "📊 Modo", value = "Texturas eliminadas", inline = true }
+            }
+        )
+
+        WindUI:Notify({ Title = "✅ Optimización", Content = "Gráficos minimizados", Duration = 2 })
     end
 })
 
-reduce:Button({
-    Title = "reduce lag (max)",
+PerformanceTab:Button({
+    Title = "🚀 Reducir Lag (Máximo)",
+    Desc = "Optimización extrema + limpieza de partículas",
+    Locked = false,
     Callback = function()
-        local KEEP_NAMES = { Floor = true, Roads = true, MainPart = true }
+        local Workspace = game:GetService("Workspace")
+
+        local KEEP_NAMES = {
+            Floor = true,
+            Roads = true,
+            MainPart = true
+        }
+
         local MAINPART_COLOR = Color3.fromRGB(80, 80, 80)
 
         local function CleanVisuals(inst)
-            if inst:IsA("Decal") or inst:IsA("Texture") or inst:IsA("SurfaceAppearance") then
+            if inst:IsA("Decal") or inst:IsA("Texture") then
+                inst:Destroy()
+            elseif inst:IsA("SurfaceAppearance") then
                 inst:Destroy()
             elseif inst:IsA("MeshPart") then
                 inst.Material = Enum.Material.SmoothPlastic
@@ -2195,38 +710,211 @@ reduce:Button({
             elseif inst:IsA("Part") or inst:IsA("UnionOperation") then
                 inst.Material = Enum.Material.SmoothPlastic
             end
+
             if inst:IsA("ParticleEmitter") or inst:IsA("Trail") or inst:IsA("Smoke") or inst:IsA("Fire") or inst:IsA("Beam") then
                 inst.Enabled = false
                 inst:Destroy()
             end
         end
 
-        for _, inst in ipairs(workspace:GetDescendants()) do
+        for _, inst in ipairs(Workspace:GetDescendants()) do
             CleanVisuals(inst)
         end
 
-        local Map = workspace:FindFirstChild("Map")
-        if Map then
-            for _, obj in ipairs(Map:GetChildren()) do
-                if not KEEP_NAMES[obj.Name] then
-                    obj:Destroy()
-                else
-                    if obj.Name == "MainPart" then
-                        if obj:IsA("BasePart") then obj.Color = MAINPART_COLOR end
-                        for _, d in ipairs(obj:GetDescendants()) do
-                            if d:IsA("BasePart") then d.Color = MAINPART_COLOR end
-                        end
-                    end
-                end
-            end
-            Map.ChildAdded:Connect(function(obj)
-                if not KEEP_NAMES[obj.Name] then obj:Destroy() end
-            end)
-        end
+        Workspace.DescendantAdded:Connect(function(inst)
+            CleanVisuals(inst)
+        end)
 
-        workspace.DescendantAdded:Connect(CleanVisuals)
-        WindUI:Notify({ Title = "Done", Content = "Max lag reduction applied", Duration = 3 })
+        sendWebhook(
+            "⚡ Optimización Máxima Aplicada",
+            "Se eliminaron todas las partículas y texturas",
+            65280,
+            {
+                { name = "👤 Usuario", value = player.Name, inline = true },
+                { name = "⚡ Modo", value = "Lag MÁXIMO reducido", inline = true }
+            }
+        )
+
+        WindUI:Notify({ Title = "✅ Optimización", Content = "Lag reducido al máximo", Duration = 2 })
     end
 })
 
-print("[Lunar Hub Improved] Loaded successfully")
+PerformanceTab:Section({
+    Text = "📊 Información del Sistema"
+})
+
+PerformanceTab:Label({
+    Text = "Dispositivo: Mobile (Delta Executor)",
+    Explode = false
+})
+
+PerformanceTab:Label({
+    Text = "FPS: " .. math.floor(1 / RunService.Heartbeat:Wait()),
+    Explode = false
+})
+
+PerformanceTab:Label({
+    Text = "Memoria: " .. tostring(collectgarbage("count") / 1024) .. " MB",
+    Explode = false
+})
+
+--//═══════════════════════════════════════════════════════════════
+--//                    TAB AJUSTES
+--//═══════════════════════════════════════════════════════════════
+
+SettingsTab:Section({
+    Text = "🎨 Apariencia"
+})
+
+SettingsTab:Toggle({
+    Title = "Mostrar Notificaciones",
+    Desc = "Activa/desactiva notificaciones",
+    Icon = "bell",
+    Type = "Checkbox",
+    Value = true,
+    Callback = function(state)
+        -- Guardar preferencia
+    end
+})
+
+SettingsTab:Section({
+    Text = "📤 Discord"
+})
+
+SettingsTab:Input({
+    Title = "URL del Webhook",
+    Desc = "Reemplaza el webhook actual",
+    Value = "Click para ver",
+    InputIcon = "link",
+    Type = "Input",
+    Placeholder = "https://discord.com/api/webhooks/...",
+    Callback = function(input)
+        if string.match(input, "https://discord.com/api/webhooks/") then
+            WEBHOOK_URL = input
+            sendWebhook(
+                "🔗 Webhook Actualizado",
+                "Se actualizó el URL del webhook correctamente",
+                65280,
+                {
+                    { name = "👤 Usuario", value = player.Name, inline = true },
+                    { name = "✅ Estado", value = "Webhook cambiado", inline = true }
+                }
+            )
+            WindUI:Notify({ Title = "✅ Actualizado", Content = "Webhook cambiado", Duration = 2 })
+        else
+            WindUI:Notify({ Title = "❌ Error", Content = "URL inválida", Duration = 2 })
+        end
+    end
+})
+
+SettingsTab:Section({
+    Text = "ℹ️ Información"
+})
+
+SettingsTab:Label({
+    Text = "Versión: 2.0 MEJORADO",
+    Explode = false
+})
+
+SettingsTab:Label({
+    Text = "Autor: kyokie",
+    Explode = false
+})
+
+SettingsTab:Label({
+    Text = "Plataforma: Delta Executor (Mobile)",
+    Explode = false
+})
+
+SettingsTab:Button({
+    Title = "📋 Copiar Información",
+    Desc = "Copia tus datos al portapapeles",
+    Locked = false,
+    Callback = function()
+        if setclipboard then
+            local info = "Usuario: " .. player.Name .. "\nID: " .. player.UserId .. "\nExecutor: " .. executor .. "\nHub: Lunar v2.0"
+            setclipboard(info)
+            WindUI:Notify({ Title = "✅ Copiado", Content = "Info copiada", Duration = 2 })
+        end
+    end
+})
+
+--//═══════════════════════════════════════════════════════════════
+--//                    MANEJO DE RESPAWN
+--//═══════════════════════════════════════════════════════════════
+
+player.CharacterAdded:Connect(function(newChar)
+    char = newChar
+    hrp = char:WaitForChild("HumanoidRootPart")
+    humanoid = char:WaitForChild("Humanoid")
+    
+    sendWebhook(
+        "💀 Respawn Detectado",
+        "El usuario reaparece en el mapa",
+        16755200,
+        {
+            { name = "👤 Usuario", value = player.Name, inline = true },
+            { name = "📍 Ubicación", value = "HRP: " .. tostring(hrp.Position), inline = false }
+        }
+    )
+    
+    WindUI:Notify({ Title = "💀 Respawn", Content = "¡Has reaparecido!", Duration = 2 })
+end)
+
+--//═══════════════════════════════════════════════════════════════
+--//                    WEBHOOK PERIÓDICO
+--//═══════════════════════════════════════════════════════════════
+
+task.spawn(function()
+    while true do
+        task.wait(300) -- Cada 5 minutos
+        
+        -- Enviar estado cada 5 minutos
+        local activeTeches = {}
+        for name, state in pairs(TechStates) do
+            if state then
+                table.insert(activeTeches, name)
+            end
+        end
+        
+        if #activeTeches > 0 then
+            sendWebhook(
+                "📊 Reporte de Actividad",
+                "Techs activos: " .. table.concat(activeTeches, ", "),
+                3447003,
+                {
+                    { name = "👤 Usuario", value = player.Name, inline = true },
+                    { name = "⚡ Techs Activos", value = #activeTeches, inline = true },
+                    { name = "⏰ Uptime", value = "5 minutos", inline = true }
+                }
+            )
+        end
+    end
+end)
+
+--//═══════════════════════════════════════════════════════════════
+--//                    WEBHOOK AL CERRAR
+--//═══════════════════════════════════════════════════════════════
+
+local RunService = game:GetService("RunService")
+
+game:BindToClose(function()
+    sendWebhook(
+        "👋 Script Cerrado",
+        "El usuario salió del juego",
+        16711680,
+        {
+            { name = "👤 Usuario", value = player.Name, inline = true },
+            { name = "⏰ Duración", value = "Session completa", inline = true },
+            { name = "🔚 Razón", value = "Usuario salió", inline = true }
+        }
+    )
+end)
+
+--//═══════════════════════════════════════════════════════════════
+--// FIN DEL SCRIPT
+--//═══════════════════════════════════════════════════════════════
+
+print("✅ Lunar Hub v2.0 Cargado Correctamente")
+print("📱 Optimizado para Delta Executor")
+print("🌙 Presiona K para mostrar/ocultar la interfaz")
