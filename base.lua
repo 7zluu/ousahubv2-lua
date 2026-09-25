@@ -263,7 +263,7 @@ local flingPower = 10000
 -- QoL Settings
 local PingAdjustEnabled = true
 local NotifyOnTech = true
-local AntiAFKEnabled = true
+local AntiAFKEnabled = not UserInputService.TouchEnabled -- off by default on mobile
 local BasePing = 50 -- ms reference
 
 -- ====================== UTILITY FUNCTIONS ======================
@@ -350,7 +350,26 @@ local function getClosestEnemy(maxDist)
     return best
 end
 
+-- Mobile detection: simulating keyboard keys on mobile makes many games
+-- hide the touch combat buttons (M1/block/dash) and switch to PC UI.
+local isMobile = UserInputService.TouchEnabled
+if isMobile then
+    print("[Lunar Hub] Mobile detected — keyboard simulation disabled to protect touch buttons")
+end
+
+local function safeKeyPress(keyCode)
+    -- On mobile: avoid VirtualInputManager keyboard events (breaks touch buttons)
+    if isMobile then
+        return
+    end
+    pcall(function()
+        VirtualInputManager:SendKeyEvent(true, keyCode, false, game)
+        VirtualInputManager:SendKeyEvent(false, keyCode, false, game)
+    end)
+end
+
 local function fireQ()
+    -- Always prefer the game remote (works on mobile without faking keyboard)
     if DashRemote then
         pcall(function()
             DashRemote:FireServer({
@@ -358,12 +377,56 @@ local function fireQ()
             })
         end)
     end
-    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Q, false, game)
-    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Q, false, game)
+    -- Only simulate physical Q key on PC
+    if not isMobile then
+        pcall(function()
+            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Q, false, game)
+            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Q, false, game)
+        end)
+    end
 end
 
 local function autoPressQ()
     fireQ()
+end
+
+-- Try to bring back mobile combat / touch controls after death or rejoin
+local function restoreMobileControls()
+    if not UserInputService.TouchEnabled then return end
+
+    local pg = player:FindFirstChild("PlayerGui")
+    if not pg then return end
+
+    -- Re-enable TouchGui if the game uses default Roblox touch controls
+    local touchGui = pg:FindFirstChild("TouchGui")
+    if touchGui then
+        touchGui.Enabled = true
+        for _, d in ipairs(touchGui:GetDescendants()) do
+            if d:IsA("GuiObject") then
+                d.Visible = true
+            end
+        end
+    end
+
+    -- Re-enable common custom mobile combat UI names
+    for _, gui in ipairs(pg:GetChildren()) do
+        if gui:IsA("ScreenGui") then
+            local n = string.lower(gui.Name)
+            if n:find("touch") or n:find("mobile") or n:find("combat")
+                or n:find("hotbar") or n:find("skill") or n:find("ability")
+                or n:find("button") or n:find("control") then
+                gui.Enabled = true
+                pcall(function()
+                    gui.ResetOnSpawn = true -- let the game manage it
+                end)
+            end
+        end
+    end
+
+    -- Clear focus so touch works again
+    pcall(function()
+        game:GetService("GuiService").SelectedObject = nil
+    end)
 end
 
 local function forceJump(height)
@@ -890,8 +953,7 @@ local function setupCharacter(char)
                 local char = player.Character
                 local root = char and getRoot(char)
                 if root then
-                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Two, false, game)
-                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Two, false, game)
+                    safeKeyPress(Enum.KeyCode.Two)
                     local look = root.CFrame.LookVector
                     local horizontalLook = Vector3.new(look.X, 0, look.Z)
                     if horizontalLook.Magnitude > 0 then
@@ -908,8 +970,7 @@ local function setupCharacter(char)
                 local char = player.Character
                 local root = char and getRoot(char)
                 if root then
-                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Two, false, game)
-                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Two, false, game)
+                    safeKeyPress(Enum.KeyCode.Two)
                     local conn
                     conn = RunService.Heartbeat:Connect(function()
                         root.AssemblyLinearVelocity = root.CFrame.LookVector * 150
@@ -927,8 +988,7 @@ local function setupCharacter(char)
                 local char = player.Character
                 local root = char and getRoot(char)
                 if root then
-                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Two, false, game)
-                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Two, false, game)
+                    safeKeyPress(Enum.KeyCode.Two)
                     root.CFrame = root.CFrame + (root.CFrame.LookVector * 30)
                     notifyTech("Auto Kyoto Legit")
                 end
@@ -1100,11 +1160,36 @@ settingsTab:Toggle({
 
 settingsTab:Toggle({
     Title = "Anti-AFK",
-    Desc = "Prevents being kicked for inactivity",
+    Desc = "Prevents being kicked for inactivity (keep OFF on mobile)",
     Icon = "shield",
     Type = "Checkbox",
-    Value = true,
+    Value = AntiAFKEnabled,
     Callback = function(state) AntiAFKEnabled = state end
+})
+
+settingsTab:Button({
+    Title = "Fix Mobile Buttons",
+    Desc = "Try to restore M1 / block / dash touch buttons after death",
+    Callback = function()
+        restoreMobileControls()
+        pcall(function()
+            game:GetService("GuiService").SelectedObject = nil
+        end)
+        local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+        if hum then
+            pcall(function()
+                hum.PlatformStand = false
+                hum.AutoRotate = true
+                hum.Sit = false
+            end)
+        end
+        WindUI:Notify({
+            Title = "Mobile Fix",
+            Content = "Attempted to restore touch combat buttons",
+            Duration = 3,
+            Icon = "smartphone"
+        })
+    end
 })
 
 settingsTab:Button({
@@ -1892,13 +1977,18 @@ local function hardResetCombatState(char)
         UserInputService.MouseIconEnabled = true
     end)
 
-    -- Release any key that VirtualInputManager might have left pressed
-    pcall(function()
-        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Q, false, game)
-        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
-        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Two, false, game)
-        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.LeftShift, false, game)
-    end)
+    -- Release any key that VirtualInputManager might have left pressed (PC only)
+    if not isMobile then
+        pcall(function()
+            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Q, false, game)
+            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Two, false, game)
+            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.LeftShift, false, game)
+        end)
+    end
+
+    -- Critical on mobile: try to bring combat touch buttons back
+    restoreMobileControls()
 end
 
 local function onCharacterRespawned(char)
