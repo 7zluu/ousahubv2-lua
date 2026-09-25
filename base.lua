@@ -177,10 +177,29 @@ local settingsTab = Window:Tab({ Title = "Settings / QoL", Locked = false })
 main:Select()
 
 -- ====================== SERVICES & CONSTANTS ======================
-local DashRemote = ReplicatedStorage:FindFirstChild("Resources") 
-    and ReplicatedStorage.Resources:FindFirstChild("Brother")
-    and ReplicatedStorage.Resources.Brother:FindFirstChild("#Friend")
-    and ReplicatedStorage.Resources.Brother["#Friend"].Communicate
+local DashRemote = nil
+pcall(function()
+    local resources = ReplicatedStorage:FindFirstChild("Resources")
+    local brother = resources and resources:FindFirstChild("Brother")
+    local friend = brother and brother:FindFirstChild("#Friend")
+    DashRemote = friend and friend:FindFirstChild("Communicate")
+end)
+-- Fallback: search by name if path changed
+if not DashRemote then
+    pcall(function()
+        for _, obj in ipairs(ReplicatedStorage:GetDescendants()) do
+            if obj:IsA("RemoteEvent") and (obj.Name == "Communicate" or obj.Name:lower():find("dash")) then
+                DashRemote = obj
+                break
+            end
+        end
+    end)
+end
+if DashRemote then
+    print("[Lunar Hub] DashRemote found:", DashRemote:GetFullName())
+else
+    warn("[Lunar Hub] DashRemote NOT found — dash techs may fail")
+end
 
 local UPPERCUT = {
     ["rbxassetid://10503381238"] = true,
@@ -350,16 +369,75 @@ local function getClosestEnemy(maxDist)
     return best
 end
 
--- Mobile detection: simulating keyboard keys on mobile makes many games
--- hide the touch combat buttons (M1/block/dash) and switch to PC UI.
+-- Mobile detection
 local isMobile = UserInputService.TouchEnabled
+-- If true, techs may work better on mobile but can break touch buttons briefly
+local MobileKeySim = true
+
 if isMobile then
-    print("[Lunar Hub] Mobile detected — keyboard simulation disabled to protect touch buttons")
+    print("[Lunar Hub] Mobile detected — using mobile-safe dash (remote + button + short key sim)")
+end
+
+-- Forward declaration (used by fireQ / safeKeyPress before the full body)
+local restoreMobileControls
+
+-- Try to press a GuiButton by firing its click connections (executor APIs)
+local function clickGuiButton(btn)
+    if not btn then return false end
+    local ok = false
+    pcall(function()
+        if firesignal then
+            firesignal(btn.MouseButton1Click)
+            firesignal(btn.Activated)
+            ok = true
+        end
+    end)
+    pcall(function()
+        if getconnections then
+            for _, conn in ipairs(getconnections(btn.MouseButton1Click)) do
+                if conn.Fire then conn:Fire() ok = true end
+            end
+            for _, conn in ipairs(getconnections(btn.Activated)) do
+                if conn.Fire then conn:Fire() ok = true end
+            end
+        end
+    end)
+    pcall(function()
+        if btn.Activate then btn:Activate() ok = true end
+    end)
+    return ok
+end
+
+-- Find dash / skill buttons on mobile UI by name
+local function findAndClickButton(keywords)
+    local pg = player:FindFirstChild("PlayerGui")
+    if not pg then return false end
+    for _, obj in ipairs(pg:GetDescendants()) do
+        if obj:IsA("GuiButton") or obj:IsA("ImageButton") or obj:IsA("TextButton") then
+            local n = string.lower(obj.Name)
+            for _, kw in ipairs(keywords) do
+                if n:find(kw, 1, true) then
+                    if clickGuiButton(obj) then
+                        return true
+                    end
+                end
+            end
+        end
+    end
+    return false
 end
 
 local function safeKeyPress(keyCode)
-    -- On mobile: avoid VirtualInputManager keyboard events (breaks touch buttons)
     if isMobile then
+        if not MobileKeySim then return end
+        -- Short keyboard pulse then restore touch UI (needed for some techs on mobile)
+        pcall(function()
+            VirtualInputManager:SendKeyEvent(true, keyCode, false, game)
+            VirtualInputManager:SendKeyEvent(false, keyCode, false, game)
+        end)
+        task.delay(0.15, function()
+            restoreMobileControls()
+        end)
         return
     end
     pcall(function()
@@ -369,7 +447,7 @@ local function safeKeyPress(keyCode)
 end
 
 local function fireQ()
-    -- Always prefer the game remote (works on mobile without faking keyboard)
+    -- 1) Game remote (main method)
     if DashRemote then
         pcall(function()
             DashRemote:FireServer({
@@ -377,8 +455,25 @@ local function fireQ()
             })
         end)
     end
-    -- Only simulate physical Q key on PC
-    if not isMobile then
+
+    -- 2) On mobile: also try clicking the on-screen dash button
+    if isMobile then
+        findAndClickButton({"dash", "qdash", "q_btn", "qbtn", "btn_q", "dodge", "sidestep"})
+    end
+
+    -- 3) Keyboard simulation
+    if isMobile then
+        if MobileKeySim then
+            pcall(function()
+                VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Q, false, game)
+                VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Q, false, game)
+            end)
+            -- Restore touch buttons shortly after so they don't stay broken
+            task.delay(0.15, function()
+                restoreMobileControls()
+            end)
+        end
+    else
         pcall(function()
             VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Q, false, game)
             VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Q, false, game)
@@ -391,7 +486,7 @@ local function autoPressQ()
 end
 
 -- Try to bring back mobile combat / touch controls after death or rejoin
-local function restoreMobileControls()
+restoreMobileControls = function()
     if not UserInputService.TouchEnabled then return end
 
     local pg = player:FindFirstChild("PlayerGui")
@@ -1165,6 +1260,17 @@ settingsTab:Toggle({
     Type = "Checkbox",
     Value = AntiAFKEnabled,
     Callback = function(state) AntiAFKEnabled = state end
+})
+
+settingsTab:Toggle({
+    Title = "Mobile Key Sim (for techs)",
+    Desc = "Needed for techs on mobile. May briefly affect touch buttons (auto-restores)",
+    Icon = "smartphone",
+    Type = "Checkbox",
+    Value = true,
+    Callback = function(state)
+        MobileKeySim = state
+    end
 })
 
 settingsTab:Button({
