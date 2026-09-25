@@ -579,11 +579,27 @@ local function setupCharacter(char)
 
     humanoid.Died:Connect(function()
         attached = false
+        isAttaching = false
+        attachCooldown = false
         if followConnection then
             followConnection:Disconnect()
             followConnection = nil
         end
+        if attachConnection then
+            attachConnection:Disconnect()
+            attachConnection = nil
+        end
+        -- Unlock humanoid state before character is removed
+        pcall(function()
+            humanoid.PlatformStand = false
+            humanoid.AutoRotate = true
+        end)
         hrp = nil
+
+        -- Clear GUI focus so combat buttons work after respawn
+        pcall(function()
+            game:GetService("GuiService").SelectedObject = nil
+        end)
     end)
 
     humanoid.AnimationPlayed:Connect(function(track)
@@ -1804,71 +1820,129 @@ M1reset:Input({
     end
 })
 
--- ====================== FIX: UI AFTER DEATH / RESPAWN ======================
--- Problem: after death, game combat buttons (M1 / block / dash) stop receiving clicks
--- if our GUIs sit on top of them or if input focus is stuck.
+-- ====================== FIX: COMBAT BUTTONS AFTER DEATH ======================
+-- Symptom: after respawn, game M1/block/dash stop receiving clicks, but chat,
+-- settings and ability buttons still work → usually an invisible Active frame
+-- covering the viewport, or stuck GUI focus / humanoid state.
 local GuiService = game:GetService("GuiService")
+
+-- Disable Active on large transparent frames that can eat world/combat clicks
+-- (does not touch small buttons or the hub when it is intentionally open)
+local function releaseInputBlockers()
+    local pg = player:FindFirstChild("PlayerGui")
+    if not pg then return end
+
+    for _, gui in ipairs(pg:GetChildren()) do
+        if gui:IsA("ScreenGui") then
+            local gname = string.lower(gui.Name)
+            -- Never strip the game's own combat UI
+            local isGameCombat = gname:find("combat") or gname:find("hotbar") or gname:find("ability")
+                or gname:find("skill") or gname:find("mobile") or gname:find("touch")
+
+            if not isGameCombat then
+                for _, desc in ipairs(gui:GetDescendants()) do
+                    if desc:IsA("Frame") or desc:IsA("TextButton") or desc:IsA("ImageButton") then
+                        local size = desc.AbsoluteSize
+                        -- Large transparent active frames can block combat / world clicks
+                        if size.X > 300 and size.Y > 300 then
+                            local bg = desc.BackgroundTransparency
+                            if typeof(bg) == "number" and bg >= 0.95 and desc.Active then
+                                local dname = string.lower(desc.Name)
+                                if dname:find("overlay") or dname:find("modal") or dname:find("sink")
+                                    or dname:find("blocker") or dname:find("capture")
+                                    or dname == "frame" or dname == "" then
+                                    desc.Active = false
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+local function hardResetCombatState(char)
+    attached = false
+    isAttaching = false
+    attachCooldown = false
+    didUppercut = false
+    onCooldown = false
+
+    if followConnection then
+        followConnection:Disconnect()
+        followConnection = nil
+    end
+    if attachConnection then
+        attachConnection:Disconnect()
+        attachConnection = nil
+    end
+
+    local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        pcall(function()
+            humanoid.PlatformStand = false
+            humanoid.AutoRotate = true
+            humanoid.Sit = false
+        end)
+    end
+
+    pcall(function()
+        GuiService.SelectedObject = nil
+        UserInputService.MouseIconEnabled = true
+    end)
+
+    -- Release any key that VirtualInputManager might have left pressed
+    pcall(function()
+        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Q, false, game)
+        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Two, false, game)
+        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.LeftShift, false, game)
+    end)
+end
 
 local function onCharacterRespawned(char)
     task.spawn(function()
         local humanoid = char:WaitForChild("Humanoid", 10)
         char:WaitForChild("HumanoidRootPart", 10)
 
-        -- Let the game finish recreating its combat UI first
-        task.wait(1.2)
+        -- Wait for the game to rebuild its combat UI
+        task.wait(0.5)
+        hardResetCombatState(char)
 
-        -- 1. Clear any stuck GUI focus (very common cause of "buttons don't click")
+        task.wait(0.8)
+
+        -- Clear focus again after game UI is ready
         pcall(function()
             GuiService.SelectedObject = nil
-            UserInputService.MouseIconEnabled = true
         end)
 
-        -- 2. Make sure humanoid is not left in a blocked state
-        if humanoid then
-            pcall(function()
-                humanoid.PlatformStand = false
-                humanoid.AutoRotate = true
-                humanoid:ChangeState(Enum.HumanoidStateType.Running)
-            end)
-        end
+        -- Neutralize invisible full-screen input sinks (without touching game combat UI)
+        pcall(releaseInputBlockers)
 
-        -- 3. Only set ResetOnSpawn on our UIs — never raise DisplayOrder above the game
+        -- Keep our GUIs from resetting on next death (no DisplayOrder changes)
         protectWindUIGuis()
 
-        -- 4. Re-apply hub open button / key (does not cover combat buttons)
-        pcall(function()
-            Window:SetToggleKey(Enum.KeyCode.K)
-            applyOpenButton()
-        end)
-
-        -- 5. Recreate M1 Reset GUI only if enabled (now in bottom-left, low DisplayOrder)
+        -- Only recreate M1 GUI if user had it on (bottom-left, low order)
         if m1resetEnabled then
             if not m1resetGui or not m1resetGui.Parent then
                 createM1ResetGui()
             end
         end
 
-        -- 6. Refresh camera + root references
         cam = workspace.CurrentCamera
         hrp = getRoot(char)
 
-        -- 7. Reset attach / fling state so nothing keeps sinking input
-        attached = false
-        isAttaching = false
-        if followConnection then
-            followConnection:Disconnect()
-            followConnection = nil
-        end
-        if attachConnection then
-            attachConnection:Disconnect()
-            attachConnection = nil
-        end
+        -- Re-bind toggle key only (do NOT re-create open button every death —
+        -- that was suspected of leaving an input-blocking overlay)
+        pcall(function()
+            Window:SetToggleKey(Enum.KeyCode.K)
+        end)
     end)
 end
 
 player.CharacterAdded:Connect(onCharacterRespawned)
 
--- Only protect ResetOnSpawn when our own guis appear — do not touch DisplayOrder
 player:WaitForChild("PlayerGui").ChildAdded:Connect(function(child)
     if child:IsA("ScreenGui") then
         local name = string.lower(child.Name)
