@@ -1,14 +1,3 @@
---[[
-    ╔═══════════════════════════════════════════════════════════════╗
-    ║           LUNAR HUB v2.0 - Delta Executor Optimized          ║
-    ║                  Mejorado por kyokie                          ║
-    ║         Script compilado y optimizado para mobile            ║
-    ╚═══════════════════════════════════════════════════════════════╝
-]]
-
---//═══════════════════════════════════════════════════════════════
---//                  SERVICIOS Y CONFIGURACIÓN
---//═══════════════════════════════════════════════════════════════
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
