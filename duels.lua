@@ -4,7 +4,7 @@ local TweenService     = game:GetService("TweenService")
 local RunService       = game:GetService("RunService")
 local Debris           = game:GetService("Debris")
 
-local WORD    = "NEXVYRHUB"
+local WORD    = "6call"
 local FONT    = Enum.Font.Garamond
 local FX_LEVEL = 1
 
@@ -651,7 +651,7 @@ local misAnimacionesOriginales = nil
 local UIElements = {}
 
 local Persist = { Items = {}, Order = {}, Loading = false, Ready = false, Data = nil, Base = 0, Start = os.clock() }
-Persist.Folder = "NexvyrHub_Configs_WindUI"
+Persist.Folder = "6call_Configs_WindUI"
 Persist.File = Persist.Folder .. "/autoload.json"
 
 pcall(function()
@@ -733,7 +733,7 @@ local equipGunEnabled = false
 local nexvyrSetInvisibleWorker
 
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "NexvyrHub_Overlays"
+screenGui.Name = "6call_Overlays"
 screenGui.ResetOnSpawn = false
 screenGui.IgnoreGuiInset = true
 screenGui.DisplayOrder = 999
@@ -800,7 +800,7 @@ pcall(function() WindUI:SetTheme("Crimson") end)
 
 local Window = WindUI:CreateWindow({
     Theme = "Crimson",
-    Title = "NEXVYRHUB | DUELS <font color='#FFD700'>[v3.2] </font>",
+    Title = "6call | DUELS <font color='#FFD700'>[v3.2] </font>",
     Author = "By 7.dui🇲🇽",
     Folder = "Nexvyr_WindUI",
     Acrylic = false,
@@ -884,8 +884,8 @@ do
 end
 
 do
-    local WORKER_URL = "https://usuarios-activos.theluxzgod.workers.dev"
-    local REFRESH_SECONDS = 45
+    local WORKER_URL = ""
+    local REFRESH_SECONDS = 1000
     local activeTag
     local lastCount
 
@@ -3015,7 +3015,7 @@ Tabs.ExtrasScripts:Button({
 task.wait()
 
 do
-    local DISCORD_LINK = "https://discord.gg/xw3Rr2W7v"
+    local DISCORD_LINK = "https://discord.gg/mdzcHjY7VS"
     local IMAGE_ID = 114452675067716
     local THUMB_SIZE = 110
     local ContentProvider = game:GetService("ContentProvider")
@@ -6734,7 +6734,7 @@ local BG_ON    = Color3.fromRGB(20, 40, 30)
 local TI       = TweenInfo.new(0.28, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 
 local floatGui = Instance.new("ScreenGui")
-floatGui.Name = "NexvyrHub_FloatingButtons"
+floatGui.Name = "6call_FloatingButtons"
 floatGui.ResetOnSpawn = false
 floatGui.IgnoreGuiInset = true
 floatGui.DisplayOrder = 1000
@@ -6971,7 +6971,7 @@ end
 for i, def in ipairs(defs) do buttons[#buttons + 1] = createButton(def, i) end
 
 local emoteGui = Instance.new("ScreenGui")
-emoteGui.Name = "NexvyrHub_EmoteButton"
+emoteGui.Name = "6call_EmoteButton"
 emoteGui.ResetOnSpawn = false
 emoteGui.IgnoreGuiInset = true
 emoteGui.DisplayOrder = 1000
