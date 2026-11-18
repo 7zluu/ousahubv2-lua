@@ -4,7 +4,7 @@ local TweenService     = game:GetService("TweenService")
 local RunService       = game:GetService("RunService")
 local Debris           = game:GetService("Debris")
 
-local WORD    = "sexcall"
+local WORD    = "excall"
 local FONT    = Enum.Font.Garamond
 local FX_LEVEL = 1
 
@@ -65,11 +65,11 @@ local IN    = Enum.EasingDirection.In
 local player    = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
-local prev = playerGui:FindFirstChild("NexvyrIntro")
+local prev = playerGui:FindFirstChild("LuuIntro")
 if prev then prev:Destroy() end
 
 local gui = new("ScreenGui", {
-	Name = "NexvyrIntro", ResetOnSpawn = false, IgnoreGuiInset = true,
+	Name = "LuuIntro", ResetOnSpawn = false, IgnoreGuiInset = true,
 	DisplayOrder = 999, ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
 }, playerGui)
 
@@ -608,7 +608,7 @@ end
 for _, e in ipairs(events) do
 	waitUntil(e.t)
 	local ok, err = pcall(e.fn)
-	if not ok then warn("[NexvyrIntro] " .. tostring(err)) end
+	if not ok then warn("[LuuIntro] " .. tostring(err)) end
 end
 waitUntil(T.outro)
 outro()
@@ -719,18 +719,18 @@ local function persistColor(key, element, get, apply)
     end)
 end
 
-local nexvyrUpdateTargetFeatures
-local nexvyrRefreshTargetMonitor
-local nexvyrSetAimTarget
-local nexvyrStartAutoShootWorker
-local nexvyrStartSilentAimWorker
-local nexvyrStartEquipWorker
-local nexvyrStartESPWorker
-local nexvyrStartHitboxWorker
-local nexvyrStartAnimationWorker
-local nexvyrStartFOVWorker
+local luuUpdateTargetFeatures
+local luuRefreshTargetMonitor
+local luuSetAimTarget
+local luuStartAutoShootWorker
+local luuStartSilentAimWorker
+local luuStartEquipWorker
+local luuStartESPWorker
+local luuStartHitboxWorker
+local luuStartAnimationWorker
+local luuStartFOVWorker
 local equipGunEnabled = false
-local nexvyrSetInvisibleWorker
+local luuSetInvisibleWorker
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "6call_Overlays"
@@ -740,7 +740,7 @@ screenGui.DisplayOrder = 999
 screenGui.Parent = player:WaitForChild("PlayerGui")
 
 local espFolder = Instance.new("Folder")
-espFolder.Name = "NexvyrESPFolder"
+espFolder.Name = "LuuESPFolder"
 espFolder.Parent = screenGui
 
 local WindUI
@@ -802,7 +802,7 @@ local Window = WindUI:CreateWindow({
     Theme = "Crimson",
     Title = "6call | DUELS <font color='#FFD700'>[v3.2] </font>",
     Author = "By 7.dui🇲🇽",
-    Folder = "Nexvyr_WindUI",
+    Folder = "Luu_WindUI",
     Acrylic = false,
     Transparent = false,
     NewElements = true,
@@ -1773,36 +1773,36 @@ local function setupPlayerEvents(p)
     updateEnemy()
 end
 
-local nexvyrTargetConnections = {}
-local nexvyrTargetMonitorActive = false
-local nexvyrTargetMonitorSession = 0
-local function nexvyrMonitorConnection(connection)
-  VELOR$TargetConnections[#nexvyrTargetConnections + 1] = connection
+local luuTargetConnections = {}
+local luuTargetMonitorActive = false
+local luuTargetMonitorSession = 0
+local function luuMonitorConnection(connection)
+  luuTargetConnections[#luuTargetConnections + 1] = connection
     return connection
 end
-local function nexvyrStartTargetMonitor()
-    if nexvyrTargetMonitorActive then return end
-  VELOR$TargetMonitorActive = true
-  VELOR$TargetMonitorSession += 1
-    local session = nexvyrTargetMonitorSession
+local function luuStartTargetMonitor()
+    if luuTargetMonitorActive then return end
+  luuTargetMonitorActive = true
+  luuTargetMonitorSession += 1
+    local session = luuTargetMonitorSession
     local function localChanged() updateMyTeam(); dmvsInfectionMarkDirty() end
     for _, name in ipairs({"Team", "TeamColor"}) do
-      VELOR$MonitorConnection(player:GetPropertyChangedSignal(name):Connect(localChanged))
+      luuMonitorConnection(player:GetPropertyChangedSignal(name):Connect(localChanged))
     end
     for _, name in ipairs({"Team", "team", "Game", "MatchId", "GameMode", "MatchMode", "Mode"}) do
-      VELOR$MonitorConnection(player:GetAttributeChangedSignal(name):Connect(localChanged))
+      luuMonitorConnection(player:GetAttributeChangedSignal(name):Connect(localChanged))
     end
-  VELOR$MonitorConnection(player.AttributeChanged:Connect(function(name)
+  luuMonitorConnection(player.AttributeChanged:Connect(function(name)
         if name == "InfectionPatientZero" or name == "InfectionInfected" or name == "IsInfected"
             or name == "Infected" or name == "IsZombie" or name == "Zombie" then dmvsInfectionMarkDirty() end
     end))
-  VELOR$MonitorConnection(player.CharacterAdded:Connect(dmvsInfectionMarkDirty))
-  VELOR$MonitorConnection(playerGui.DescendantAdded:Connect(function(instance)
+  luuMonitorConnection(player.CharacterAdded:Connect(dmvsInfectionMarkDirty))
+  luuMonitorConnection(playerGui.DescendantAdded:Connect(function(instance)
         if instance.Name == "IngameScore" or instance.Name == "TeamRed" or instance.Name == "TeamBlue" then
             dmvsInvalidateScoreboard(); dmvsInfectionMarkDirty()
         end
     end))
-  VELOR$MonitorConnection(playerGui.DescendantRemoving:Connect(function(instance)
+  luuMonitorConnection(playerGui.DescendantRemoving:Connect(function(instance)
         if instance == dmvsTeamResolverState.Scoreboard or instance.Name == "IngameScore"
             or instance.Name == "TeamRed" or instance.Name == "TeamBlue" then
             dmvsInvalidateScoreboard(); dmvsInfectionMarkDirty()
@@ -1811,12 +1811,12 @@ local function nexvyrStartTargetMonitor()
     for _, other in ipairs(Players:GetPlayers()) do
         if other ~= player then setupPlayerEvents(other) end
     end
-  MonitorConnection(Players.PlayerAdded:Connect(function(other)
+  luuMonitorConnection(Players.PlayerAdded:Connect(function(other)
         dmvsInfectionState.LateJoiners[other] = true
         setupPlayerEvents(other)
         dmvsInfectionMarkDirty()
     end))
-  VELOR$MonitorConnection(Players.PlayerRemoving:Connect(function(other)
+  luuMonitorConnection(Players.PlayerRemoving:Connect(function(other)
         disconnectPlayerTeamEvents(other)
         for i = #dmvsInfectionState.Pending, 1, -1 do
             local entry = dmvsInfectionState.Pending[i]
@@ -1839,7 +1839,7 @@ local function nexvyrStartTargetMonitor()
                 if dmvsInfectionState.Active then dmvsClearInfectionRound(true) end
             end
         }
-        while nexvyrTargetMonitorActive and session == nexvyrTargetMonitorSession do
+        while luuTargetMonitorActive and session == luuTargetMonitorSession do
             local packages = ReplicatedStorage:FindFirstChild("Packages")
             local networking = packages and packages:FindFirstChild("Networking")
             local finished = true
@@ -1847,7 +1847,7 @@ local function nexvyrStartTargetMonitor()
                 if not registered[name] then
                     local remote = networking and networking:FindFirstChild(name)
                     if remote and remote:IsA("RemoteEvent") then
-                      VELOR$MonitorConnection(remote.OnClientEvent:Connect(callback))
+                      luuMonitorConnection(remote.OnClientEvent:Connect(callback))
                         registered[name] = true
                     else
                         finished = false
@@ -1859,11 +1859,11 @@ local function nexvyrStartTargetMonitor()
         end
     end)
 end
-local function nexvyrStopTargetMonitor()
-    if not nexvyrTargetMonitorActive then return end
-  VELOR$TargetMonitorActive = false
-  VELOR$TargetMonitorSession += 1
-    dmvsDisconnectConnectionList(nexvyrTargetConnections)
+local function luuStopTargetMonitor()
+    if not luuTargetMonitorActive then return end
+  luuTargetMonitorActive = false
+  luuTargetMonitorSession += 1
+    dmvsDisconnectConnectionList(luuTargetConnections)
     for other in pairs(dmvsTeamPlayerConnections) do disconnectPlayerTeamEvents(other) end
     dmvsDisconnectConnectionList(dmvsTeamResolverState.WatchConnections)
     dmvsTeamResolverState.Scoreboard = nil
@@ -1872,14 +1872,14 @@ local function nexvyrStopTargetMonitor()
     dmvsTeamResolverState.Dirty = true
     dmvsClearInfectionRound(false)
 end
-nexvyrRefreshTargetMonitor = function()
+luuRefreshTargetMonitor = function()
     if autoShootEnabled or autoShootAgresivoEnabled or silentAimManualEnabled
         or silentAimFovEnabled or equipGunEnabled
         or (espEnabled and (espSettings.Glow or espSettings.Box or espSettings.Name))
         or hitboxEnabled or KillAllEnabled then
-      VELOR$StartTargetMonitor()
+      luuStartTargetMonitor()
     else
-      VELOR$StopTargetMonitor()
+      luuStopTargetMonitor()
     end
 end
 
@@ -2004,10 +2004,10 @@ local function limpiarHitboxes()
 end
 
 do
-local nexvyrHitboxWorkerRunning = false
-nexvyrStartHitboxWorker = function()
-    if nexvyrHitboxWorkerRunning or not hitboxEnabled then return end
-  VELOR$HitboxWorkerRunning = true
+local luuHitboxWorkerRunning = false
+luuStartHitboxWorker = function()
+    if luuHitboxWorkerRunning or not hitboxEnabled then return end
+  luuHitboxWorkerRunning = true
     task.spawn(function()
     while hitboxEnabled do
         task.wait(0.2)
@@ -2058,7 +2058,7 @@ nexvyrStartHitboxWorker = function()
             end
         end
     end
-  VELOR$HitboxWorkerRunning = false
+  luuHitboxWorkerRunning = false
     if not hitboxEnabled then limpiarHitboxes() end
     end)
 end
@@ -3068,7 +3068,7 @@ do
         if not parent then return end
 
         local card = new("Frame", {
-            Name = "NexvyrPerfil",
+            Name = "LuuPerfil",
             Size = UDim2.new(1, 0, 0, 88),
             BackgroundColor3 = Color3.fromRGB(26, 12, 16),
             BackgroundTransparency = 0.25,
@@ -3273,8 +3273,8 @@ UIElements.TogAutoShoot = Tabs.Aim:Toggle({
     Title = "Auto Shoot (Normal - Cabeza/Torso)",
     Callback = function(Value)
         autoShootEnabled = Value
-        if not Value and not autoShootEnabled and not autoShootAgresivoEnabled and nexvyrSetAimTarget then nexvyrSetAimTarget("Auto", nil) end
-        if nexvyrUpdateTargetFeatures then nexvyrUpdateTargetFeatures() end
+        if not Value and not autoShootEnabled and not autoShootAgresivoEnabled and luuSetAimTarget then luuSetAimTarget("Auto", nil) end
+        if luuUpdateTargetFeatures then luuUpdateTargetFeatures() end
     end
 })
 
@@ -3282,8 +3282,8 @@ UIElements.TogAutoShootAgr = Tabs.Aim:Toggle({
     Title = "Auto Shoot (Agresivo - Hitbox Completa)",
     Callback = function(Value)
         autoShootAgresivoEnabled = Value
-        if not Value and not autoShootEnabled and not autoShootAgresivoEnabled and nexvyrSetAimTarget then nexvyrSetAimTarget("Auto", nil) end
-        if nexvyrUpdateTargetFeatures then nexvyrUpdateTargetFeatures() end
+        if not Value and not autoShootEnabled and not autoShootAgresivoEnabled and luuSetAimTarget then luuSetAimTarget("Auto", nil) end
+        if luuUpdateTargetFeatures then luuUpdateTargetFeatures() end
     end
 })
 
@@ -3299,15 +3299,15 @@ UIElements.TogEquipGun = Tabs.Aim:Toggle({
     Value = false,
     Callback = function(Value)
         equipGunEnabled = Value
-        if nexvyrUpdateTargetFeatures then nexvyrUpdateTargetFeatures() end
+        if luuUpdateTargetFeatures then luuUpdateTargetFeatures() end
     end
 })
 
 do
-local nexvyrEquipWorkerRunning = false
-nexvyrStartEquipWorker = function()
-    if nexvyrEquipWorkerRunning or not equipGunEnabled then return end
-  VELOR$EquipWorkerRunning = true
+local luuEquipWorkerRunning = false
+luuStartEquipWorker = function()
+    if luuEquipWorkerRunning or not equipGunEnabled then return end
+  luuEquipWorkerRunning = true
     task.spawn(function()
     local gunRayParams = RaycastParams.new()
     gunRayParams.FilterType = Enum.RaycastFilterType.Exclude
@@ -3353,7 +3353,7 @@ nexvyrStartEquipWorker = function()
         if char and hum then pcall(function() hum:UnequipTools() end) end
         task.wait(1.9)
     end
-  VELOR$EquipWorkerRunning = false
+  luuEquipWorkerRunning = false
     end)
 end
 end
@@ -3368,8 +3368,8 @@ UIElements.TogSilentAimManual = Tabs.Aim:Toggle({
     Title = "Silent Aim",
     Callback = function(Value)
         silentAimManualEnabled = Value
-        if not Value and not silentAimManualEnabled and not silentAimFovEnabled and nexvyrSetAimTarget then nexvyrSetAimTarget("Silent", nil) end
-        if nexvyrUpdateTargetFeatures then nexvyrUpdateTargetFeatures() end
+        if not Value and not silentAimManualEnabled and not silentAimFovEnabled and luuSetAimTarget then luuSetAimTarget("Silent", nil) end
+        if luuUpdateTargetFeatures then luuUpdateTargetFeatures() end
     end
 })
 
@@ -3384,8 +3384,8 @@ UIElements.TogSilentAimFOV = Tabs.Aim:Toggle({
     Title = "Silent Aim (Con FOV)",
     Callback = function(Value)
         silentAimFovEnabled = Value
-        if not Value and not silentAimManualEnabled and not silentAimFovEnabled and nexvyrSetAimTarget then nexvyrSetAimTarget("Silent", nil) end
-        if nexvyrUpdateTargetFeatures then nexvyrUpdateTargetFeatures() end
+        if not Value and not silentAimManualEnabled and not silentAimFovEnabled and luuSetAimTarget then luuSetAimTarget("Silent", nil) end
+        if luuUpdateTargetFeatures then luuUpdateTargetFeatures() end
     end
 })
 
@@ -3393,7 +3393,7 @@ UIElements.TogShowFOV = Tabs.Aim:Toggle({
     Title = "Mostrar Círculo FOV",
     Callback = function(Value)
         fovVisiblePreference = Value
-        if nexvyrStartFOVWorker then nexvyrStartFOVWorker() end
+        if luuStartFOVWorker then luuStartFOVWorker() end
     end
 })
 
@@ -3415,75 +3415,75 @@ persistToggle("TogSilentAimFOV", UIElements.TogSilentAimFOV, function() return s
 persistToggle("TogShowFOV", UIElements.TogShowFOV, function() return fovVisiblePreference end)
 
 do
-getgenv().NexvyrTargetPart = nil
-local oldNexvyrHook = getgenv().__NexvyrDeferredNamecall
-if oldNexvyrHook then oldNexvyrHook.Enabled = false end
+getgenv().LuuTargetPart = nil
+local oldLuuHook = getgenv().__LuuDeferredNamecall
+if oldLuuHook then oldLuuHook.Enabled = false end
 
-local nexvyrMouse = player:GetMouse()
-local nexvyrAimTargets = {Auto = nil, Silent = nil}
-local nexvyrAutoFireUntil = 0
-local priorNexvyrAimCleanup = getgenv().__NexvyrDmvsAimCleanup
-if type(priorNexvyrAimCleanup) == "function" then pcall(priorNexvyrAimCleanup) end
-getgenv().__NexvyrDmvsAimCleanup = nil
-local nexvyrHooks = {Enabled = false, Metatable = nil, IndexHook = nil, NamecallHook = nil}
-local nexvyrIsMadium = false
+local luuMouse = player:GetMouse()
+local luuAimTargets = {Auto = nil, Silent = nil}
+local luuAutoFireUntil = 0
+local priorLuuAimCleanup = getgenv().__LuuDmvsAimCleanup
+if type(priorLuuAimCleanup) == "function" then pcall(priorLuuAimCleanup) end
+getgenv().__LuuDmvsAimCleanup = nil
+local luuHooks = {Enabled = false, Metatable = nil, IndexHook = nil, NamecallHook = nil}
+local luuIsMadium = false
 do
     local identify = type(getexecutorname) == "function" and getexecutorname or identifyexecutor
     if type(identify) == "function" then
         local ok, name = pcall(identify)
-      VELOR$IsMadium = ok and tostring(name):lower():find("madium", 1, true) ~= nil or false
+      luuIsMadium = ok and tostring(name):lower():find("madium", 1, true) ~= nil or false
     end
 end
-local nexvyrDirectCalls = {}
-pcall(function() nexvyrDirectCalls.Raycast = workspace.Raycast end)
-pcall(function() nexvyrDirectCalls.FindPartOnRay = workspace.FindPartOnRay end)
-pcall(function() nexvyrDirectCalls.FindPartOnRayWithIgnoreList = workspace.FindPartOnRayWithIgnoreList end)
-pcall(function() nexvyrDirectCalls.FindPartOnRayWithWhitelist = workspace.FindPartOnRayWithWhitelist end)
+local luuDirectCalls = {}
+pcall(function() luuDirectCalls.Raycast = workspace.Raycast end)
+pcall(function() luuDirectCalls.FindPartOnRay = workspace.FindPartOnRay end)
+pcall(function() luuDirectCalls.FindPartOnRayWithIgnoreList = workspace.FindPartOnRayWithIgnoreList end)
+pcall(function() luuDirectCalls.FindPartOnRayWithWhitelist = workspace.FindPartOnRayWithWhitelist end)
 
-local function nexvyrAimActive()
+local function luuAimActive()
     return autoShootEnabled or autoShootAgresivoEnabled or silentAimManualEnabled or silentAimFovEnabled
 end
 
-local function nexvyrValidTarget(target)
+local function luuValidTarget(target)
     if typeof(target) ~= "Instance" or not target:IsA("BasePart") or not target.Parent then return false end
     local character = target:FindFirstAncestorOfClass("Model")
     local hum = character and character:FindFirstChildOfClass("Humanoid")
     return hum ~= nil and hum.Health > 0
 end
 
-local function nexvyrSelectedAimTarget()
+local function luuSelectedAimTarget()
     local now = os.clock()
     local autoActive = autoShootEnabled or autoShootAgresivoEnabled
-    if autoActive and now <= nexvyrAutoFireUntil and nexvyrValidTarget(nexvyrAimTargets.Auto) then
-        return nexvyrAimTargets.Auto
+    if autoActive and now <= luuAutoFireUntil and luuValidTarget(luuAimTargets.Auto) then
+        return luuAimTargets.Auto
     end
-    if (silentAimManualEnabled or silentAimFovEnabled) and nexvyrValidTarget(nexvyrAimTargets.Silent) then
-        return nexvyrAimTargets.Silent
+    if (silentAimManualEnabled or silentAimFovEnabled) and luuValidTarget(luuAimTargets.Silent) then
+        return luuAimTargets.Silent
     end
-    if autoActive and nexvyrValidTarget(nexvyrAimTargets.Auto) then
-        return nexvyrAimTargets.Auto
+    if autoActive and luuValidTarget(luuAimTargets.Auto) then
+        return luuAimTargets.Auto
     end
     return nil
 end
 
-nexvyrSetAimTarget = function(source, target)
+luuSetAimTarget = function(source, target)
     if source ~= "Auto" and source ~= "Silent" then return end
-  VELOR$AimTargets[source] = nexvyrValidTarget(target) and target or nil
-    getgenv().NexvyrTargetPart = nexvyrSelectedAimTarget()
+  luuAimTargets[source] = luuValidTarget(target) and target or nil
+    getgenv().LuuTargetPart = luuSelectedAimTarget()
 end
 
-local function nexvyrGetAimPoint()
-    if not nexvyrHooks.Enabled or not nexvyrAimActive() or estaEnLobby() then return nil end
+local function luuGetAimPoint()
+    if not luuHooks.Enabled or not luuAimActive() or estaEnLobby() then return nil end
     local char = player.Character
     if not char then return nil end
     local equipped = char:FindFirstChildOfClass("Tool")
     if not (esPistola(equipped) or (autoShootAgresivoEnabled and equipped and not esCuchillo(equipped))) then return nil end
-    local target = nexvyrSelectedAimTarget()
+    local target = luuSelectedAimTarget()
     if not target then return nil end
     return target.Position, target
 end
 
-local function nexvyrLikelyWeaponOrigin(origin)
+local function luuLikelyWeaponOrigin(origin)
     if typeof(origin) ~= "Vector3" then return false end
     local currentCamera = workspace.CurrentCamera
     if currentCamera and (origin - currentCamera.CFrame.Position).Magnitude <= 3 then return true end
@@ -3496,7 +3496,7 @@ local function nexvyrLikelyWeaponOrigin(origin)
     return head and (origin - head.Position).Magnitude <= 8 or false
 end
 
-local function nexvyrShotOrigin()
+local function luuShotOrigin()
     local cam = workspace.CurrentCamera
     local cameraOrigin = cam and cam.CFrame.Position
     local char = player.Character
@@ -3511,41 +3511,41 @@ local function nexvyrShotOrigin()
     return cameraOrigin
 end
 
-local function nexvyrRestoreHooks()
-  VELOR$Hooks.Enabled = false
-    local mt = nexvyrHooks.Metatable
+local function luuRestoreHooks()
+  luuHooks.Enabled = false
+    local mt = luuHooks.Metatable
     if not mt or type(setreadonly) ~= "function" then return end
     local ok = pcall(setreadonly, mt, false)
     if not ok then return end
     pcall(function()
-        if mt.__index == nexvyrHooks.IndexHook then mt.__index = nexvyrHooks.OriginalIndex end
-        if nexvyrHooks.NamecallHook and mt.__namecall == nexvyrHooks.NamecallHook then
-            mt.__namecall = nexvyrHooks.OriginalNamecall
+        if mt.__index == luuHooks.IndexHook then mt.__index = luuHooks.OriginalIndex end
+        if luuHooks.NamecallHook and mt.__namecall == luuHooks.NamecallHook then
+            mt.__namecall = luuHooks.OriginalNamecall
         end
     end)
-    pcall(setreadonly, mt, nexvyrHooks.WasReadonly)
-    if mt.__index ~= nexvyrHooks.IndexHook
-        and (not nexvyrHooks.NamecallHook or mt.__namecall ~= nexvyrHooks.NamecallHook) then
-      VELOR$Hooks.Metatable = nil
-      VELOR$Hooks.IndexHook = nil
-      VELOR$Hooks.NamecallHook = nil
+    pcall(setreadonly, mt, luuHooks.WasReadonly)
+    if mt.__index ~= luuHooks.IndexHook
+        and (not luuHooks.NamecallHook or mt.__namecall ~= luuHooks.NamecallHook) then
+      luuHooks.Metatable = nil
+      luuHooks.IndexHook = nil
+      luuHooks.NamecallHook = nil
     end
 end
 
-getgenv().__NexvyrDmvsAimCleanup = nexvyrRestoreHooks
+getgenv().__LuuDmvsAimCleanup = luuRestoreHooks
 
-local function nexvyrInstallHooks()
-    if nexvyrHooks.Metatable then
-        local mt = nexvyrHooks.Metatable
-        local active = mt.__index == nexvyrHooks.IndexHook
-      VELOR$Hooks.Enabled = active
+local function luuInstallHooks()
+    if luuHooks.Metatable then
+        local mt = luuHooks.Metatable
+        local active = mt.__index == luuHooks.IndexHook
+      luuHooks.Enabled = active
         return active
     end
     if type(getrawmetatable) ~= "function" or type(setreadonly) ~= "function" then
-        warn("Nexvyr: este executor no permite instalar la redireccion del mouse.")
+        warn("Luu: este executor no permite instalar la redireccion del mouse.")
         return false
     end
-    local ok, mt = pcall(getrawmetatable, nexvyrIsMadium and game or nexvyrMouse)
+    local ok, mt = pcall(getrawmetatable, luuIsMadium and game or luuMouse)
     if not ok or not mt then return false end
     local originalIndex, originalNamecall = mt.__index, mt.__namecall
     if type(originalIndex) ~= "function" and type(originalIndex) ~= "table" then return false end
@@ -3559,16 +3559,16 @@ local function nexvyrInstallHooks()
         return originalIndex[key]
     end
     local indexHook = function(self, key)
-        if nexvyrHooks.Enabled and self == nexvyrMouse
-            and (key == "Hit" or key == "Target" or key == "UnitRay" or (nexvyrIsMadium and key == "TargetSurface"))
-            and (nexvyrIsMadium or type(checkcaller) ~= "function" or not checkcaller()) then
-            local ok, point, target = pcall(nexvyrGetAimPoint)
+        if luuHooks.Enabled and self == luuMouse
+            and (key == "Hit" or key == "Target" or key == "UnitRay" or (luuIsMadium and key == "TargetSurface"))
+            and (luuIsMadium or type(checkcaller) ~= "function" or not checkcaller()) then
+            local ok, point, target = pcall(luuGetAimPoint)
             if ok and point and target then
                 if key == "Target" then return target end
                 if key == "TargetSurface" then return Enum.NormalId.Front end
                 if key == "Hit" then
-                    if nexvyrIsMadium then return CFrame.new(point) end
-                    local origin = nexvyrShotOrigin()
+                    if luuIsMadium then return CFrame.new(point) end
+                    local origin = luuShotOrigin()
                     local direction = origin and point - origin
                     if direction and direction.Magnitude > 0.001 then
                         return CFrame.lookAt(point, point + direction.Unit)
@@ -3579,7 +3579,7 @@ local function nexvyrInstallHooks()
                 local origin = typeof(originalRay) == "Ray" and originalRay.Origin or nil
                 if not origin then
                     local cam = workspace.CurrentCamera
-                    origin = cam and cam.CFrame.Position or nexvyrShotOrigin()
+                    origin = cam and cam.CFrame.Position or luuShotOrigin()
                 end
                 local direction = origin and point - origin
                 if direction and direction.Magnitude > 0.001 then
@@ -3590,13 +3590,13 @@ local function nexvyrInstallHooks()
         return originalLookup(self, key)
     end
     local namecallHook
-    if not nexvyrIsMadium and type(originalNamecall) == "function"
+    if not luuIsMadium and type(originalNamecall) == "function"
         and type(getnamecallmethod) == "function" and type(checkcaller) == "function" then
         namecallHook = function(self, ...)
-            if not nexvyrHooks.Enabled or checkcaller() then return originalNamecall(self, ...) end
-            if self == workspace and not nexvyrHooks.ResolvingRay then
+            if not luuHooks.Enabled or checkcaller() then return originalNamecall(self, ...) end
+            if self == workspace and not luuHooks.ResolvingRay then
                 local method = getnamecallmethod()
-                local direct = method and nexvyrDirectCalls[method]
+                local direct = method and luuDirectCalls[method]
                 if direct then
                     local args = table.pack(...)
                     local origin, length
@@ -3607,10 +3607,10 @@ local function nexvyrInstallHooks()
                     elseif typeof(args[1]) == "Ray" then
                         origin, length = args[1].Origin, args[1].Direction.Magnitude
                     end
-                    if origin and length and length >= 50 and nexvyrLikelyWeaponOrigin(origin) then
-                      VELOR$Hooks.ResolvingRay = true
-                        local success, point = pcall(nexvyrGetAimPoint)
-                      VELOR$Hooks.ResolvingRay = false
+                    if origin and length and length >= 50 and luuLikelyWeaponOrigin(origin) then
+                      luuHooks.ResolvingRay = true
+                        local success, point = pcall(luuGetAimPoint)
+                      luuHooks.ResolvingRay = false
                         if success and point then
                             local toward = point - origin
                             if toward.Magnitude > 0.001 then
@@ -3642,54 +3642,54 @@ local function nexvyrInstallHooks()
         return false
     end
     pcall(setreadonly, mt, wasReadonly)
-  VELOR$Hooks.Metatable = mt
-  VELOR$Hooks.OriginalIndex = originalIndex
-  VELOR$Hooks.OriginalNamecall = originalNamecall
-  VELOR$Hooks.IndexHook = indexHook
-  VELOR$Hooks.NamecallHook = namecallHook
-  VELOR$Hooks.WasReadonly = wasReadonly
-  VELOR$Hooks.Enabled = true
+  luuHooks.Metatable = mt
+  luuHooks.OriginalIndex = originalIndex
+  luuHooks.OriginalNamecall = originalNamecall
+  luuHooks.IndexHook = indexHook
+  luuHooks.NamecallHook = namecallHook
+  luuHooks.WasReadonly = wasReadonly
+  luuHooks.Enabled = true
     return true
 end
 
-local function nexvyrUpdateHook()
-    if nexvyrAimActive() then
-      VELOR$InstallHooks()
+local function luuUpdateHook()
+    if luuAimActive() then
+      luuInstallHooks()
     else
-      VELOR$AimTargets.Auto = nil
-      VELOR$AimTargets.Silent = nil
-      VELOR$AutoFireUntil = 0
-        getgenv().NexvyrTargetPart = nil
-      VELOR$RestoreHooks()
+      luuAimTargets.Auto = nil
+      luuAimTargets.Silent = nil
+      luuAutoFireUntil = 0
+        getgenv().LuuTargetPart = nil
+      luuRestoreHooks()
     end
 end
-local nexvyrUpdateTargetWorkers
-nexvyrUpdateTargetFeatures = function()
-  VELOR$RefreshTargetMonitor()
-  VELOR$UpdateHook()
-    if nexvyrUpdateTargetWorkers then nexvyrUpdateTargetWorkers() end
+local luuUpdateTargetWorkers
+luuUpdateTargetFeatures = function()
+  luuRefreshTargetMonitor()
+  luuUpdateHook()
+    if luuUpdateTargetWorkers then luuUpdateTargetWorkers() end
 end
 
-local nexvyrAutoShootWorkerRunning = false
-nexvyrStartAutoShootWorker = function()
-    if nexvyrAutoShootWorkerRunning or not (autoShootEnabled or autoShootAgresivoEnabled) then return end
-  VELOR$AutoShootWorkerRunning = true
+local luuAutoShootWorkerRunning = false
+luuStartAutoShootWorker = function()
+    if luuAutoShootWorkerRunning or not (autoShootEnabled or autoShootAgresivoEnabled) then return end
+  luuAutoShootWorkerRunning = true
     task.spawn(function()
     local params = RaycastParams.new()
     params.FilterType = Enum.RaycastFilterType.Exclude
     while autoShootEnabled or autoShootAgresivoEnabled do
         task.wait(0.1)
         if not (autoShootEnabled or autoShootAgresivoEnabled) then break end
-        if not nexvyrHooks.Enabled then continue end
+        if not luuHooks.Enabled then continue end
         if not estaEnLobby() then
             local char = player.Character
             if not char or not char:FindFirstChild("HumanoidRootPart") then continue end
             local arma = char:FindFirstChildOfClass("Tool")
-            if not arma or not arma:FindFirstChild("Handle") then nexvyrSetAimTarget("Auto", nil) continue end
+            if not arma or not arma:FindFirstChild("Handle") then luuSetAimTarget("Auto", nil) continue end
             if autoShootAgresivoEnabled then
-                if esCuchillo(arma) then nexvyrSetAimTarget("Auto", nil) continue end
+                if esCuchillo(arma) then luuSetAimTarget("Auto", nil) continue end
             elseif not esPistola(arma) then
-              VELOR$SetAimTarget("Auto", nil) continue
+              luuSetAimTarget("Auto", nil) continue
             end
             local closestTargetPart = nil
             local shortestDistance = math.huge
@@ -3779,27 +3779,27 @@ nexvyrStartAutoShootWorker = function()
                 end
             end
             if closestTargetPart then
-              VELOR$AutoFireUntil = os.clock() + 0.35
-              VELOR$SetAimTarget("Auto", closestTargetPart)
+              luuAutoFireUntil = os.clock() + 0.35
+              luuSetAimTarget("Auto", closestTargetPart)
                 pcall(function()
                     arma:Activate()
                     task.delay(0.05, function() if arma.Parent == char then arma:Deactivate() end end)
                 end)
                 task.wait(0.2)
             else
-              VELOR$SetAimTarget("Auto", nil)
+              luuSetAimTarget("Auto", nil)
             end
         end
     end
-  VELOR$SetAimTarget("Auto", nil)
-  VELOR$AutoShootWorkerRunning = false
+  luuSetAimTarget("Auto", nil)
+  luuAutoShootWorkerRunning = false
     end)
 end
 
-local nexvyrSilentWorkerRunning = false
-nexvyrStartSilentAimWorker = function()
-    if nexvyrSilentWorkerRunning or not (silentAimManualEnabled or silentAimFovEnabled) then return end
-  VELOR$SilentWorkerRunning = true
+local luuSilentWorkerRunning = false
+luuStartSilentAimWorker = function()
+    if luuSilentWorkerRunning or not (silentAimManualEnabled or silentAimFovEnabled) then return end
+  luuSilentWorkerRunning = true
     task.spawn(function()
     local params = RaycastParams.new()
     params.FilterType = Enum.RaycastFilterType.Exclude
@@ -3861,21 +3861,21 @@ nexvyrStartSilentAimWorker = function()
                 end
             end
             if closestTargetPart then
-              VELOR$SetAimTarget("Silent", closestTargetPart)
+              luuSetAimTarget("Silent", closestTargetPart)
             else
-              VELOR$SetAimTarget("Silent", nil)
+              luuSetAimTarget("Silent", nil)
             end
         end
     end
-  VELOR$SetAimTarget("Silent", nil)
-  VELOR$SilentWorkerRunning = false
+  luuSetAimTarget("Silent", nil)
+  luuSilentWorkerRunning = false
     end)
 end
 
-nexvyrUpdateTargetWorkers = function()
-    if autoShootEnabled or autoShootAgresivoEnabled then nexvyrStartAutoShootWorker() end
-    if silentAimManualEnabled or silentAimFovEnabled then nexvyrStartSilentAimWorker() end
-    if equipGunEnabled then nexvyrStartEquipWorker() end
+luuUpdateTargetWorkers = function()
+    if autoShootEnabled or autoShootAgresivoEnabled then luuStartAutoShootWorker() end
+    if silentAimManualEnabled or silentAimFovEnabled then luuStartSilentAimWorker() end
+    if equipGunEnabled then luuStartEquipWorker() end
 end
 end
 
@@ -3886,7 +3886,7 @@ UIElements.TogKillAll = Tabs.KillAll:Toggle({
     Value = false,
     Callback = function(Value)
         KillAllEnabled = Value
-        if nexvyrRefreshTargetMonitor then nexvyrRefreshTargetMonitor() end
+        if luuRefreshTargetMonitor then luuRefreshTargetMonitor() end
         if Value then KillAllInstance:Start() else KillAllInstance:Stop() end
     end
 })
@@ -3901,8 +3901,8 @@ UIElements.TogHitbox = Tabs.KillAll:Toggle({
     Value = false,
     Callback = function(Value)
         hitboxEnabled = Value
-        if nexvyrRefreshTargetMonitor then nexvyrRefreshTargetMonitor() end
-        if Value then nexvyrStartHitboxWorker() else limpiarHitboxes() end
+        if luuRefreshTargetMonitor then luuRefreshTargetMonitor() end
+        if Value then luuStartHitboxWorker() else limpiarHitboxes() end
     end
 })
 
@@ -3938,11 +3938,11 @@ local function AplicarInvisibilidadTransparencia(state)
         for _, v in pairs(player.Character:GetDescendants()) do
             if v:IsA("BasePart") then
                 if state and v.Transparency == 0 then
-                    v:SetAttribute("NexvyrOrigTrans", 0)
+                    v:SetAttribute("LuuOrigTrans", 0)
                     v.Transparency = 0.5
-                elseif not state and v:GetAttribute("NexvyrOrigTrans") ~= nil then
-                    v.Transparency = v:GetAttribute("NexvyrOrigTrans")
-                    v:SetAttribute("NexvyrOrigTrans", nil)
+                elseif not state and v:GetAttribute("LuuOrigTrans") ~= nil then
+                    v.Transparency = v:GetAttribute("LuuOrigTrans")
+                    v:SetAttribute("LuuOrigTrans", nil)
                 end
             end
         end
@@ -3955,21 +3955,21 @@ UIElements.TogInvisible = Tabs.Invisible:Toggle({
     Callback = function(Value)
         InvisibilityActive = Value
         AplicarInvisibilidadTransparencia(Value)
-        if nexvyrSetInvisibleWorker then nexvyrSetInvisibleWorker(Value) end
+        if luuSetInvisibleWorker then luuSetInvisibleWorker(Value) end
     end
 })
 
 persistToggle("TogInvisible", UIElements.TogInvisible, function() return InvisibilityActive end)
 
 do
-local nexvyrInvisibleConnection
-nexvyrSetInvisibleWorker = function(state)
-    if nexvyrInvisibleConnection then
-      VELOR$InvisibleConnection:Disconnect()
-      VELOR$InvisibleConnection = nil
+local luuInvisibleConnection
+luuSetInvisibleWorker = function(state)
+    if luuInvisibleConnection then
+      luuInvisibleConnection:Disconnect()
+      luuInvisibleConnection = nil
     end
     if not state then return end
-  VELOR$InvisibleConnection = RunService.Heartbeat:Connect(function()
+  luuInvisibleConnection = RunService.Heartbeat:Connect(function()
         if not InvisibilityActive then return end
         local Char = player.Character
         if Char then
@@ -4346,8 +4346,8 @@ local function cleanAllESPs()
 end
 
 local function refreshESP()
-    if nexvyrRefreshTargetMonitor then nexvyrRefreshTargetMonitor() end
-    if espAnyActive() then nexvyrStartESPWorker() else cleanAllESPs() end
+    if luuRefreshTargetMonitor then luuRefreshTargetMonitor() end
+    if espAnyActive() then luuStartESPWorker() else cleanAllESPs() end
 end
 
 UIElements.TogEsp = Tabs.Vis:Toggle({
@@ -4396,10 +4396,10 @@ UIElements.TogEspGl = Tabs.Vis:Toggle({
     end
 })
 
-local nexvyrESPWorkerRunning = false
-nexvyrStartESPWorker = function()
-    if nexvyrESPWorkerRunning or not espAnyActive() then return end
-  VELOR$ESPWorkerRunning = true
+local luuESPWorkerRunning = false
+luuStartESPWorker = function()
+    if luuESPWorkerRunning or not espAnyActive() then return end
+  luuESPWorkerRunning = true
     task.spawn(function()
         local removingConnection = Players.PlayerRemoving:Connect(cleanESP)
         while espAnyActive() do
@@ -4522,7 +4522,7 @@ nexvyrStartESPWorker = function()
         end
         removingConnection:Disconnect()
         cleanAllESPs()
-      VELOR$ESPWorkerRunning = false
+      luuESPWorkerRunning = false
     end)
 end
 
@@ -4533,10 +4533,10 @@ persistToggle("TogEspName", UIElements.TogEspName, function() return espSettings
 persistToggle("TogEsp", UIElements.TogEsp, function() return espEnabled end)
 
 local FOVCircle
-local nexvyrFOVConnection
-nexvyrStartFOVWorker = function()
+local luuFOVConnection
+luuStartFOVWorker = function()
     if not fovVisiblePreference then
-        if nexvyrFOVConnection then nexvyrFOVConnection:Disconnect(); nexvyrFOVConnection = nil end
+        if luuFOVConnection then luuFOVConnection:Disconnect(); luuFOVConnection = nil end
         if FOVCircle then FOVCircle.Visible = false end
         return
     end
@@ -4546,14 +4546,14 @@ nexvyrStartFOVWorker = function()
         FOVCircle.Thickness = 1
         FOVCircle.Visible = false
     end
-    if not FOVCircle or nexvyrFOVConnection then return end
-  VELOR$FOVConnection = RunService.RenderStepped:Connect(function()
+    if not FOVCircle or luuFOVConnection then return end
+  luuFOVConnection = RunService.RenderStepped:Connect(function()
         if not fovVisiblePreference then return end
         local currentCamera = workspace.CurrentCamera
         if not currentCamera then return end
         FOVCircle.Position = currentCamera.ViewportSize / 2
         FOVCircle.Radius = fovRadius
-        FOVCircle.Color = silentAimFovEnabled and getgenv().NexvyrTargetPart
+        FOVCircle.Color = silentAimFovEnabled and getgenv().LuuTargetPart
             and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 255, 255)
         FOVCircle.Visible = true
     end)
@@ -4562,7 +4562,7 @@ end
 Tabs.Farm:Section({ Title = "Farmeo de Evento", Icon = "solar:gift-bold" })
 
 getgenv().AutoEventFarm = false
-local nexvyrFarmSession = 0
+local luuFarmSession = 0
 local Networking = ReplicatedStorage:FindFirstChild("Packages") and ReplicatedStorage.Packages:FindFirstChild("Networking")
 local RemoteFarm = Networking and Networking:FindFirstChild("RE/Events/CollectEventSpawnable")
 
@@ -4570,11 +4570,11 @@ UIElements.TogAutoFarmEvent = Tabs.Farm:Toggle({
     Title = "Auto Farmear Evento",
     Callback = function(s)
         getgenv().AutoEventFarm = s
-      VELOR$FarmSession += 1
-        local session = nexvyrFarmSession
+      luuFarmSession += 1
+        local session = luuFarmSession
         if s then
             task.spawn(function()
-                while getgenv().AutoEventFarm and session == nexvyrFarmSession do
+                while getgenv().AutoEventFarm and session == luuFarmSession do
                     pcall(function()
                         if RemoteFarm then RemoteFarm:FireServer()
                         else
@@ -4588,7 +4588,7 @@ UIElements.TogAutoFarmEvent = Tabs.Farm:Toggle({
                         local container = workspace:FindFirstChild("SpawnablesClient")
                         if container then
                             for _, obj in ipairs(container:GetChildren()) do
-                                if not getgenv().AutoEventFarm or session ~= nexvyrFarmSession then break end
+                                if not getgenv().AutoEventFarm or session ~= luuFarmSession then break end
                                 local touchPart = obj:FindFirstChild("Touch")
                                 if touchPart then
                                     pcall(function()
@@ -4713,10 +4713,10 @@ local function applyCustomAnims(customData)
     end
 end
 
-local nexvyrAnimationWorkerRunning = false
-nexvyrStartAnimationWorker = function()
-    if nexvyrAnimationWorkerRunning or not animacionActualActiva then return end
-  VELOR$AnimationWorkerRunning = true
+local luuAnimationWorkerRunning = false
+luuStartAnimationWorker = function()
+    if luuAnimationWorkerRunning or not animacionActualActiva then return end
+  luuAnimationWorkerRunning = true
     task.spawn(function()
     while animacionActualActiva do
         task.wait(0.2)
@@ -4750,7 +4750,7 @@ nexvyrStartAnimationWorker = function()
             end
         end
     end
-  VELOR$AnimationWorkerRunning = false
+  luuAnimationWorkerRunning = false
     end)
 end
 
@@ -4777,7 +4777,7 @@ Tabs.Animaciones:Button({
         if selectedBundleCompleto == "Ninguno" then return end
         task.spawn(function()
             animacionActualActiva = animationData[selectedBundleCompleto]
-          VELOR$StartAnimationWorker()
+          luuStartAnimationWorker()
             applyCustomAnims(animacionActualActiva)
         end)
     end
@@ -4826,7 +4826,7 @@ Tabs.Animaciones:Button({
             for _, v in pairs(customMix) do if v then hasValues = true break end end
             if hasValues then
                 animacionActualActiva = customMix
-              VELOR$StartAnimationWorker()
+              luuStartAnimationWorker()
                 applyCustomAnims(animacionActualActiva)
             end
         end)
@@ -4838,19 +4838,19 @@ end
 local KillSoundVolume = 1
 
 local KillSoundPlayer = Instance.new("Sound")
-KillSoundPlayer.Name = "NexvyrKillSound"
+KillSoundPlayer.Name = "LuuKillSound"
 KillSoundPlayer.Volume = 1
 KillSoundPlayer.Looped = false
 KillSoundPlayer.Parent = SoundService
 
 local ShootSoundPlayer = Instance.new("Sound")
-ShootSoundPlayer.Name = "NexvyrShootSound"
+ShootSoundPlayer.Name = "LuuShootSound"
 ShootSoundPlayer.Volume = 1
 ShootSoundPlayer.Looped = false
 ShootSoundPlayer.Parent = SoundService
 
 local ReloadSoundPlayer = Instance.new("Sound")
-ReloadSoundPlayer.Name = "NexvyrReloadSound"
+ReloadSoundPlayer.Name = "LuuReloadSound"
 ReloadSoundPlayer.Volume = 1
 ReloadSoundPlayer.Looped = false
 ReloadSoundPlayer.Parent = SoundService
@@ -4929,21 +4929,21 @@ local function PlayReloadSound()
     ReloadSoundPlayer:Play()
 end
 
-local nexvyrShootConnections = {}
-local nexvyrFireWatched = setmetatable({}, {__mode = "k"})
-local nexvyrToolWatched = setmetatable({}, {__mode = "k"})
-local nexvyrShootRootWatched = setmetatable({}, {__mode = "k"})
-local function nexvyrTrackShoot(connection)
-  VELOR$ShootConnections[#nexvyrShootConnections + 1] = connection
+local luuShootConnections = {}
+local luuFireWatched = setmetatable({}, {__mode = "k"})
+local luuToolWatched = setmetatable({}, {__mode = "k"})
+local luuShootRootWatched = setmetatable({}, {__mode = "k"})
+local function luuTrackShoot(connection)
+  luuShootConnections[#luuShootConnections + 1] = connection
     return connection
 end
-local function nexvyrStopShootWatchers()
-    dmvsDisconnectConnectionList(nexvyrShootConnections)
-    table.clear(nexvyrFireWatched)
-    table.clear(nexvyrToolWatched)
-    table.clear(nexvyrShootRootWatched)
+local function luuStopShootWatchers()
+    dmvsDisconnectConnectionList(luuShootConnections)
+    table.clear(luuFireWatched)
+    table.clear(luuToolWatched)
+    table.clear(luuShootRootWatched)
 end
-local nexvyrStartReloadWorker
+local luuStartReloadWorker
 local FIRE_SOUND_KEYWORDS = { "fire","shoot","shot","gun","burst","shotgun","gunshot","muzzle","rifle","pistol","shooting","firing" }
 
 local function isFireSound(s)
@@ -4958,9 +4958,9 @@ end
 local function HookFireSound(s)
     if not s:IsA("Sound") then return end
     if not isFireSound(s) then return end
-    if not RecargaDisparoEnabled or nexvyrFireWatched[s] then return end
-  VELOR$FireWatched[s] = true
-  VELOR$TrackShoot(s.Played:Connect(function()
+    if not RecargaDisparoEnabled or luuFireWatched[s] then return end
+  luuFireWatched[s] = true
+  luuTrackShoot(s.Played:Connect(function()
         if not RecargaDisparoEnabled then return end
         local char = player.Character
         if not char then return end
@@ -4973,9 +4973,9 @@ end
 local function HookShootOnTool(tool)
     if not tool or not tool:IsA("Tool") then return end
     for _, d in ipairs(tool:GetDescendants()) do HookFireSound(d) end
-    if not nexvyrToolWatched[tool] and RecargaDisparoEnabled then
-      VELOR$ToolWatched[tool] = true
-      VELOR$TrackShoot(tool.DescendantAdded:Connect(HookFireSound))
+    if not luuToolWatched[tool] and RecargaDisparoEnabled then
+      luuToolWatched[tool] = true
+      luuTrackShoot(tool.DescendantAdded:Connect(HookFireSound))
     end
 end
 
@@ -4984,15 +4984,15 @@ local function HookShootOnRoot(root)
     for _, child in ipairs(root:GetChildren()) do
         if child:IsA("Tool") then HookShootOnTool(child) end
     end
-  VELOR$TrackShoot(root.ChildAdded:Connect(function(child)
+  luuTrackShoot(root.ChildAdded:Connect(function(child)
         if child:IsA("Tool") then HookShootOnTool(child) end
     end))
 end
 
-local nexvyrReloadRunning = false
-nexvyrStartReloadWorker = function()
-    if nexvyrReloadRunning or not RecargaDisparoEnabled then return end
-  VELOR$ReloadRunning = true
+local luuReloadRunning = false
+luuStartReloadWorker = function()
+    if luuReloadRunning or not RecargaDisparoEnabled then return end
+  luuReloadRunning = true
     task.spawn(function()
     local lastReloadState = false
     while RecargaDisparoEnabled do
@@ -5006,7 +5006,7 @@ nexvyrStartReloadWorker = function()
         if recargando and not lastReloadState then PlayReloadSound() end
         lastReloadState = recargando
     end
-  VELOR$ReloadRunning = false
+  luuReloadRunning = false
     end)
 end
 
@@ -5056,14 +5056,14 @@ local function TryPlayKillSound(primary)
     PlayKillSound()
 end
 
-local nexvyrKillConnections = {}
-local nexvyrKillWatchedStats = setmetatable({}, {__mode = "k"})
-local nexvyrKillWatchedCharacters = setmetatable({}, {__mode = "k"})
-local nexvyrKillWatchedPlayers = setmetatable({}, {__mode = "k"})
-local nexvyrKillWatchedContainers = setmetatable({}, {__mode = "k"})
-local nexvyrKillRemoteSession = 0
-local function nexvyrTrackKill(connection)
-  VELOR$KillConnections[#nexvyrKillConnections + 1] = connection
+local luuKillConnections = {}
+local luuKillWatchedStats = setmetatable({}, {__mode = "k"})
+local luuKillWatchedCharacters = setmetatable({}, {__mode = "k"})
+local luuKillWatchedPlayers = setmetatable({}, {__mode = "k"})
+local luuKillWatchedContainers = setmetatable({}, {__mode = "k"})
+local luuKillRemoteSession = 0
+local function luuTrackKill(connection)
+  luuKillConnections[#luuKillConnections + 1] = connection
     return connection
 end
 local KILL_STAT_NAMES = { kos = true, kills = true, kill = true, ko = true, killed = true, eliminations = true, kills_count = true }
@@ -5072,27 +5072,27 @@ local function HookStatValue(stat)
     if not stat then return end
     if not (stat:IsA("IntValue") or stat:IsA("NumberValue")) then return end
     if not KILL_STAT_NAMES[string.lower(stat.Name)] then return end
-    if not KillSoundEnabled or nexvyrKillWatchedStats[stat] then return end
-  VELOR$KillWatchedStats[stat] = true
+    if not KillSoundEnabled or luuKillWatchedStats[stat] then return end
+  luuKillWatchedStats[stat] = true
     local lastVal = stat.Value
-  VELOR$TrackKill(stat:GetPropertyChangedSignal("Value"):Connect(function()
+  luuTrackKill(stat:GetPropertyChangedSignal("Value"):Connect(function()
         if stat.Value > lastVal then TryPlayKillSound() end
         lastVal = stat.Value
     end))
 end
 
 local function HookLeaderstatsContainer(container)
-    if not container or not KillSoundEnabled or nexvyrKillWatchedContainers[container] then return end
-  VELOR$KillWatchedContainers[container] = true
+    if not container or not KillSoundEnabled or luuKillWatchedContainers[container] then return end
+  luuKillWatchedContainers[container] = true
     for _, stat in ipairs(container:GetChildren()) do HookStatValue(stat) end
-  VELOR$TrackKill(container.ChildAdded:Connect(HookStatValue))
+  luuTrackKill(container.ChildAdded:Connect(HookStatValue))
 end
 
 local KILL_ATTR_NAMES = {"KOs","Kills","kos","kills","KO","killed","Eliminations"}
-local function nexvyrWatchLocalKillStats()
+local function luuWatchLocalKillStats()
     for _, attrName in ipairs(KILL_ATTR_NAMES) do
         local lastVal = tonumber(player:GetAttribute(attrName))
-      VELOR$TrackKill(player:GetAttributeChangedSignal(attrName):Connect(function()
+      luuTrackKill(player:GetAttributeChangedSignal(attrName):Connect(function()
             local newVal = tonumber(player:GetAttribute(attrName))
             if newVal ~= nil and lastVal ~= nil and newVal > lastVal then TryPlayKillSound() end
             lastVal = newVal
@@ -5101,20 +5101,20 @@ local function nexvyrWatchLocalKillStats()
     for _, name in ipairs({"leaderstats", "Stats", "stats", "PlayerStats"}) do
         HookLeaderstatsContainer(player:FindFirstChild(name))
     end
-  VELOR$TrackKill(player.ChildAdded:Connect(function(child)
+  luuTrackKill(player.ChildAdded:Connect(function(child)
         if child.Name == "leaderstats" or child.Name == "Stats" or child.Name == "stats"
             or child.Name == "PlayerStats" then HookLeaderstatsContainer(child) end
     end))
 end
 
 local function HookKillOnCharacter(other, character)
-    if not KillSoundEnabled or nexvyrKillWatchedCharacters[character] then return end
-  VELOR$KillWatchedCharacters[character] = true
+    if not KillSoundEnabled or luuKillWatchedCharacters[character] then return end
+  luuKillWatchedCharacters[character] = true
     local waitConnection
     local function attachHumanoid(humanoid)
         if not KillSoundEnabled or not humanoid or not humanoid:IsA("Humanoid") then return end
         if waitConnection then waitConnection:Disconnect(); waitConnection = nil end
-      VELOR$TrackKill(humanoid.Died:Connect(function()
+      luuTrackKill(humanoid.Died:Connect(function()
             if not KillSoundEnabled then return end
             local tag = humanoid:FindFirstChild("creator")
             if tag and tag.Value == player then TryPlayKillSound() end
@@ -5123,30 +5123,30 @@ local function HookKillOnCharacter(other, character)
     local humanoid = character:FindFirstChildOfClass("Humanoid")
     if humanoid then attachHumanoid(humanoid)
     else
-        waitConnection = nexvyrTrackKill(character.ChildAdded:Connect(attachHumanoid))
+        waitConnection = luuTrackKill(character.ChildAdded:Connect(attachHumanoid))
     end
 end
 
 local function HookKillPlayer(other)
-    if other == player or not KillSoundEnabled or nexvyrKillWatchedPlayers[other] then return end
-  VELOR$KillWatchedPlayers[other] = true
+    if other == player or not KillSoundEnabled or luuKillWatchedPlayers[other] then return end
+  luuKillWatchedPlayers[other] = true
     if other.Character then HookKillOnCharacter(other, other.Character) end
-  VELOR$TrackKill(other.CharacterAdded:Connect(function(character)
+  luuTrackKill(other.CharacterAdded:Connect(function(character)
         HookKillOnCharacter(other, character)
     end))
 end
 
-local function nexvyrHookKilledRemote()
-  VELOR$KillRemoteSession += 1
-    local session = nexvyrKillRemoteSession
+local function luuHookKilledRemote()
+  luuKillRemoteSession += 1
+    local session = luuKillRemoteSession
     task.spawn(function()
         local tries = 0
-        while KillSoundEnabled and session == nexvyrKillRemoteSession and tries < 30 do
+        while KillSoundEnabled and session == luuKillRemoteSession and tries < 30 do
             local packages = ReplicatedStorage:FindFirstChild("Packages")
             local networking = packages and packages:FindFirstChild("Networking")
             local remote = networking and networking:FindFirstChild("RE/Combat/Killed")
             if remote and remote:IsA("RemoteEvent") then
-              VELOR$TrackKill(remote.OnClientEvent:Connect(function(killer)
+              luuTrackKill(remote.OnClientEvent:Connect(function(killer)
                     if killer == player then TryPlayKillSound(true) end
                 end))
                 return
@@ -5157,20 +5157,20 @@ local function nexvyrHookKilledRemote()
     end)
 end
 
-local function nexvyrStartKillWatchers()
+local function luuStartKillWatchers()
     if not KillSoundEnabled then return end
-  VELOR$HookKilledRemote()
-  VELOR$WatchLocalKillStats()
+  luuHookKilledRemote()
+  luuWatchLocalKillStats()
     for _, other in ipairs(Players:GetPlayers()) do HookKillPlayer(other) end
-  VELOR$TrackKill(Players.PlayerAdded:Connect(HookKillPlayer))
+  luuTrackKill(Players.PlayerAdded:Connect(HookKillPlayer))
 end
-local function nexvyrStopKillWatchers()
-  VELOR$KillRemoteSession += 1
-    dmvsDisconnectConnectionList(nexvyrKillConnections)
-    table.clear(nexvyrKillWatchedStats)
-    table.clear(nexvyrKillWatchedCharacters)
-    table.clear(nexvyrKillWatchedPlayers)
-    table.clear(nexvyrKillWatchedContainers)
+local function luuStopKillWatchers()
+  luuKillRemoteSession += 1
+    dmvsDisconnectConnectionList(luuKillConnections)
+    table.clear(luuKillWatchedStats)
+    table.clear(luuKillWatchedCharacters)
+    table.clear(luuKillWatchedPlayers)
+    table.clear(luuKillWatchedContainers)
 end
 
 local OriginalGunVolumes = {}
@@ -5178,18 +5178,18 @@ local HookedGunSounds = setmetatable({}, { __mode = "k" })
 
 local function MuteOwnSound(s)
     if not RecargaDisparoEnabled or not s:IsA("Sound") then return end
-    if s.Name == "NexvyrKillSound" or s.Name == "WindUI_MusicPlayer" or s.Name == "NexvyrShootSound" or s.Name == "NexvyrReloadSound" then return end
+    if s.Name == "LuuKillSound" or s.Name == "WindUI_MusicPlayer" or s.Name == "LuuShootSound" or s.Name == "LuuReloadSound" then return end
     if OriginalGunVolumes[s] == nil and s.Volume > 0 then OriginalGunVolumes[s] = s.Volume end
     if RecargaDisparoEnabled then s.Volume = 0 end
     if not HookedGunSounds[s] then
         HookedGunSounds[s] = true
-      VELOR$TrackShoot(s:GetPropertyChangedSignal("Volume"):Connect(function()
+      luuTrackShoot(s:GetPropertyChangedSignal("Volume"):Connect(function()
             if RecargaDisparoEnabled and s.Volume ~= 0 then
                 OriginalGunVolumes[s] = s.Volume
                 s.Volume = 0
             end
         end))
-      VELOR$TrackShoot(s.Played:Connect(function()
+      luuTrackShoot(s.Played:Connect(function()
             if RecargaDisparoEnabled then s.Volume = 0 end
         end))
     end
@@ -5198,7 +5198,7 @@ end
 local function HookOwnRoot(root)
     if not root then return end
     for _, d in ipairs(root:GetDescendants()) do MuteOwnSound(d) end
-  VELOR$TrackShoot(root.DescendantAdded:Connect(MuteOwnSound))
+  luuTrackShoot(root.DescendantAdded:Connect(MuteOwnSound))
 end
 
 local function ApplyMuteState(state)
@@ -5220,26 +5220,26 @@ local function ApplyMuteState(state)
     end
 end
 
-local function nexvyrStartShootWatchers()
+local function luuStartShootWatchers()
     if not RecargaDisparoEnabled then return end
     local function attach(root)
-        if not root or not RecargaDisparoEnabled or nexvyrShootRootWatched[root] then return end
-      VELOR$ShootRootWatched[root] = true
+        if not root or not RecargaDisparoEnabled or luuShootRootWatched[root] then return end
+      luuShootRootWatched[root] = true
         HookOwnRoot(root)
         HookShootOnRoot(root)
     end
     attach(player.Character)
     attach(player:FindFirstChildOfClass("Backpack"))
-  VELOR$TrackShoot(player.CharacterAdded:Connect(function(character)
+  luuTrackShoot(player.CharacterAdded:Connect(function(character)
         if not RecargaDisparoEnabled then return end
         attach(character)
         local backpack = player:FindFirstChildOfClass("Backpack")
         if backpack then attach(backpack) end
     end))
-  VELOR$TrackShoot(player.ChildAdded:Connect(function(child)
+  luuTrackShoot(player.ChildAdded:Connect(function(child)
         if child:IsA("Backpack") then attach(child) end
     end))
-  VELOR$StartReloadWorker()
+  luuStartReloadWorker()
 end
 
 Tabs.Sonidos:Section({ Title = "Sonido de Muerte", Icon = "solar:speaker-bold" })
@@ -5252,9 +5252,9 @@ UIElements.TogKillSound = Tabs.Sonidos:Toggle({
         KillSoundEnabled = v
         if v then
             PreloadKillSound()
-          VELOR$StartKillWatchers()
+          luuStartKillWatchers()
         else
-          VELOR$StopKillWatchers()
+          luuStopKillWatchers()
             KillSoundPlayer:Stop()
         end
     end
@@ -5282,10 +5282,10 @@ UIElements.TogShootReload = Tabs.Sonidos:Toggle({
         if RecargaDisparoEnabled == v then return end
         RecargaDisparoEnabled = v
         if v then
-          VELOR$StartShootWatchers()
+          luuStartShootWatchers()
             ApplyMuteState(true)
         else
-          VELOR$StopShootWatchers()
+          luuStopShootWatchers()
             ShootSoundPlayer:Stop()
             ReloadSoundPlayer:Stop()
             ApplyMuteState(false)
@@ -5621,12 +5621,12 @@ end
 
 local function isOwnRoot(inst)
     local name = inst.Name
-    return string.find(name, "WindUI", 1, true) ~= nil or string.find(name, "Nexvyr", 1, true) ~= nil
+    return string.find(name, "WindUI", 1, true) ~= nil or string.find(name, "Luu", 1, true) ~= nil
 end
 
 local function isOwnGui(v)
     local parentGui = v:FindFirstAncestorWhichIsA("ScreenGui")
-    if parentGui and (string.find(parentGui.Name, "WindUI") or string.find(parentGui.Name, "Nexvyr")) then
+    if parentGui and (string.find(parentGui.Name, "WindUI") or string.find(parentGui.Name, "Luu")) then
         return true
     end
     return false
