@@ -801,7 +801,7 @@ pcall(function() WindUI:SetTheme("Crimson") end)
 local Window = WindUI:CreateWindow({
     Theme = "Crimson",
     Title = "6call | DUELS <font color='#FFD700'>[v3.2] </font>",
-    Author = "By 7.dui🇲🇽",
+    Author = "By lou",
     Folder = "Luu_WindUI",
     Acrylic = false,
     Transparent = false,
@@ -3008,7 +3008,7 @@ Tabs.ExtrasScripts:Button({
     Icon = "solar:user-hand-up-bold",
     Variant = "Primary",
     Callback = function()
-        pcall(function() loadstring(game:HttpGet(""))() end)
+        pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/7zluu/ousahubv2-lua/refs/heads/main/base.lua"))() end)
     end
 })
 
