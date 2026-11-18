@@ -3008,7 +3008,7 @@ Tabs.ExtrasScripts:Button({
     Icon = "solar:user-hand-up-bold",
     Variant = "Primary",
     Callback = function()
-        pcall(function() loadstring(game:HttpGet("https://pastebin.com/raw/5MA88wuB"))() end)
+        pcall(function() loadstring(game:HttpGet(""))() end)
     end
 })
 
@@ -3221,7 +3221,7 @@ do
         local parent = host and host.Parent
         if parent then
             local box = new("Frame", {
-                Name = "NexvyrInicioImagen",
+                Name = "InicioImagen",
                 Size = UDim2.new(1, 0, 0, THUMB_SIZE),
                 BackgroundTransparency = 1,
                 BorderSizePixel = 0,
