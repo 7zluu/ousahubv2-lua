@@ -1777,32 +1777,32 @@ local nexvyrTargetConnections = {}
 local nexvyrTargetMonitorActive = false
 local nexvyrTargetMonitorSession = 0
 local function nexvyrMonitorConnection(connection)
-    nexvyrTargetConnections[#nexvyrTargetConnections + 1] = connection
+  VELOR$TargetConnections[#nexvyrTargetConnections + 1] = connection
     return connection
 end
 local function nexvyrStartTargetMonitor()
     if nexvyrTargetMonitorActive then return end
-    nexvyrTargetMonitorActive = true
-    nexvyrTargetMonitorSession += 1
+  VELOR$TargetMonitorActive = true
+  VELOR$TargetMonitorSession += 1
     local session = nexvyrTargetMonitorSession
     local function localChanged() updateMyTeam(); dmvsInfectionMarkDirty() end
     for _, name in ipairs({"Team", "TeamColor"}) do
-        nexvyrMonitorConnection(player:GetPropertyChangedSignal(name):Connect(localChanged))
+      VELOR$MonitorConnection(player:GetPropertyChangedSignal(name):Connect(localChanged))
     end
     for _, name in ipairs({"Team", "team", "Game", "MatchId", "GameMode", "MatchMode", "Mode"}) do
-        nexvyrMonitorConnection(player:GetAttributeChangedSignal(name):Connect(localChanged))
+      VELOR$MonitorConnection(player:GetAttributeChangedSignal(name):Connect(localChanged))
     end
-    nexvyrMonitorConnection(player.AttributeChanged:Connect(function(name)
+  VELOR$MonitorConnection(player.AttributeChanged:Connect(function(name)
         if name == "InfectionPatientZero" or name == "InfectionInfected" or name == "IsInfected"
             or name == "Infected" or name == "IsZombie" or name == "Zombie" then dmvsInfectionMarkDirty() end
     end))
-    nexvyrMonitorConnection(player.CharacterAdded:Connect(dmvsInfectionMarkDirty))
-    nexvyrMonitorConnection(playerGui.DescendantAdded:Connect(function(instance)
+  VELOR$MonitorConnection(player.CharacterAdded:Connect(dmvsInfectionMarkDirty))
+  VELOR$MonitorConnection(playerGui.DescendantAdded:Connect(function(instance)
         if instance.Name == "IngameScore" or instance.Name == "TeamRed" or instance.Name == "TeamBlue" then
             dmvsInvalidateScoreboard(); dmvsInfectionMarkDirty()
         end
     end))
-    nexvyrMonitorConnection(playerGui.DescendantRemoving:Connect(function(instance)
+  VELOR$MonitorConnection(playerGui.DescendantRemoving:Connect(function(instance)
         if instance == dmvsTeamResolverState.Scoreboard or instance.Name == "IngameScore"
             or instance.Name == "TeamRed" or instance.Name == "TeamBlue" then
             dmvsInvalidateScoreboard(); dmvsInfectionMarkDirty()
@@ -1811,12 +1811,12 @@ local function nexvyrStartTargetMonitor()
     for _, other in ipairs(Players:GetPlayers()) do
         if other ~= player then setupPlayerEvents(other) end
     end
-    nexvyrMonitorConnection(Players.PlayerAdded:Connect(function(other)
+  MonitorConnection(Players.PlayerAdded:Connect(function(other)
         dmvsInfectionState.LateJoiners[other] = true
         setupPlayerEvents(other)
         dmvsInfectionMarkDirty()
     end))
-    nexvyrMonitorConnection(Players.PlayerRemoving:Connect(function(other)
+  VELOR$MonitorConnection(Players.PlayerRemoving:Connect(function(other)
         disconnectPlayerTeamEvents(other)
         for i = #dmvsInfectionState.Pending, 1, -1 do
             local entry = dmvsInfectionState.Pending[i]
@@ -1847,7 +1847,7 @@ local function nexvyrStartTargetMonitor()
                 if not registered[name] then
                     local remote = networking and networking:FindFirstChild(name)
                     if remote and remote:IsA("RemoteEvent") then
-                        nexvyrMonitorConnection(remote.OnClientEvent:Connect(callback))
+                      VELOR$MonitorConnection(remote.OnClientEvent:Connect(callback))
                         registered[name] = true
                     else
                         finished = false
@@ -1861,8 +1861,8 @@ local function nexvyrStartTargetMonitor()
 end
 local function nexvyrStopTargetMonitor()
     if not nexvyrTargetMonitorActive then return end
-    nexvyrTargetMonitorActive = false
-    nexvyrTargetMonitorSession += 1
+  VELOR$TargetMonitorActive = false
+  VELOR$TargetMonitorSession += 1
     dmvsDisconnectConnectionList(nexvyrTargetConnections)
     for other in pairs(dmvsTeamPlayerConnections) do disconnectPlayerTeamEvents(other) end
     dmvsDisconnectConnectionList(dmvsTeamResolverState.WatchConnections)
@@ -1877,9 +1877,9 @@ nexvyrRefreshTargetMonitor = function()
         or silentAimFovEnabled or equipGunEnabled
         or (espEnabled and (espSettings.Glow or espSettings.Box or espSettings.Name))
         or hitboxEnabled or KillAllEnabled then
-        nexvyrStartTargetMonitor()
+      VELOR$StartTargetMonitor()
     else
-        nexvyrStopTargetMonitor()
+      VELOR$StopTargetMonitor()
     end
 end
 
@@ -2007,7 +2007,7 @@ do
 local nexvyrHitboxWorkerRunning = false
 nexvyrStartHitboxWorker = function()
     if nexvyrHitboxWorkerRunning or not hitboxEnabled then return end
-    nexvyrHitboxWorkerRunning = true
+  VELOR$HitboxWorkerRunning = true
     task.spawn(function()
     while hitboxEnabled do
         task.wait(0.2)
@@ -2058,7 +2058,7 @@ nexvyrStartHitboxWorker = function()
             end
         end
     end
-    nexvyrHitboxWorkerRunning = false
+  VELOR$HitboxWorkerRunning = false
     if not hitboxEnabled then limpiarHitboxes() end
     end)
 end
@@ -3307,7 +3307,7 @@ do
 local nexvyrEquipWorkerRunning = false
 nexvyrStartEquipWorker = function()
     if nexvyrEquipWorkerRunning or not equipGunEnabled then return end
-    nexvyrEquipWorkerRunning = true
+  VELOR$EquipWorkerRunning = true
     task.spawn(function()
     local gunRayParams = RaycastParams.new()
     gunRayParams.FilterType = Enum.RaycastFilterType.Exclude
@@ -3353,7 +3353,7 @@ nexvyrStartEquipWorker = function()
         if char and hum then pcall(function() hum:UnequipTools() end) end
         task.wait(1.9)
     end
-    nexvyrEquipWorkerRunning = false
+  VELOR$EquipWorkerRunning = false
     end)
 end
 end
@@ -3431,7 +3431,7 @@ do
     local identify = type(getexecutorname) == "function" and getexecutorname or identifyexecutor
     if type(identify) == "function" then
         local ok, name = pcall(identify)
-        nexvyrIsMadium = ok and tostring(name):lower():find("madium", 1, true) ~= nil or false
+      VELOR$IsMadium = ok and tostring(name):lower():find("madium", 1, true) ~= nil or false
     end
 end
 local nexvyrDirectCalls = {}
@@ -3468,7 +3468,7 @@ end
 
 nexvyrSetAimTarget = function(source, target)
     if source ~= "Auto" and source ~= "Silent" then return end
-    nexvyrAimTargets[source] = nexvyrValidTarget(target) and target or nil
+  VELOR$AimTargets[source] = nexvyrValidTarget(target) and target or nil
     getgenv().NexvyrTargetPart = nexvyrSelectedAimTarget()
 end
 
@@ -3512,7 +3512,7 @@ local function nexvyrShotOrigin()
 end
 
 local function nexvyrRestoreHooks()
-    nexvyrHooks.Enabled = false
+  VELOR$Hooks.Enabled = false
     local mt = nexvyrHooks.Metatable
     if not mt or type(setreadonly) ~= "function" then return end
     local ok = pcall(setreadonly, mt, false)
@@ -3526,9 +3526,9 @@ local function nexvyrRestoreHooks()
     pcall(setreadonly, mt, nexvyrHooks.WasReadonly)
     if mt.__index ~= nexvyrHooks.IndexHook
         and (not nexvyrHooks.NamecallHook or mt.__namecall ~= nexvyrHooks.NamecallHook) then
-        nexvyrHooks.Metatable = nil
-        nexvyrHooks.IndexHook = nil
-        nexvyrHooks.NamecallHook = nil
+      VELOR$Hooks.Metatable = nil
+      VELOR$Hooks.IndexHook = nil
+      VELOR$Hooks.NamecallHook = nil
     end
 end
 
@@ -3538,7 +3538,7 @@ local function nexvyrInstallHooks()
     if nexvyrHooks.Metatable then
         local mt = nexvyrHooks.Metatable
         local active = mt.__index == nexvyrHooks.IndexHook
-        nexvyrHooks.Enabled = active
+      VELOR$Hooks.Enabled = active
         return active
     end
     if type(getrawmetatable) ~= "function" or type(setreadonly) ~= "function" then
@@ -3608,9 +3608,9 @@ local function nexvyrInstallHooks()
                         origin, length = args[1].Origin, args[1].Direction.Magnitude
                     end
                     if origin and length and length >= 50 and nexvyrLikelyWeaponOrigin(origin) then
-                        nexvyrHooks.ResolvingRay = true
+                      VELOR$Hooks.ResolvingRay = true
                         local success, point = pcall(nexvyrGetAimPoint)
-                        nexvyrHooks.ResolvingRay = false
+                      VELOR$Hooks.ResolvingRay = false
                         if success and point then
                             local toward = point - origin
                             if toward.Magnitude > 0.001 then
@@ -3642,38 +3642,38 @@ local function nexvyrInstallHooks()
         return false
     end
     pcall(setreadonly, mt, wasReadonly)
-    nexvyrHooks.Metatable = mt
-    nexvyrHooks.OriginalIndex = originalIndex
-    nexvyrHooks.OriginalNamecall = originalNamecall
-    nexvyrHooks.IndexHook = indexHook
-    nexvyrHooks.NamecallHook = namecallHook
-    nexvyrHooks.WasReadonly = wasReadonly
-    nexvyrHooks.Enabled = true
+  VELOR$Hooks.Metatable = mt
+  VELOR$Hooks.OriginalIndex = originalIndex
+  VELOR$Hooks.OriginalNamecall = originalNamecall
+  VELOR$Hooks.IndexHook = indexHook
+  VELOR$Hooks.NamecallHook = namecallHook
+  VELOR$Hooks.WasReadonly = wasReadonly
+  VELOR$Hooks.Enabled = true
     return true
 end
 
 local function nexvyrUpdateHook()
     if nexvyrAimActive() then
-        nexvyrInstallHooks()
+      VELOR$InstallHooks()
     else
-        nexvyrAimTargets.Auto = nil
-        nexvyrAimTargets.Silent = nil
-        nexvyrAutoFireUntil = 0
+      VELOR$AimTargets.Auto = nil
+      VELOR$AimTargets.Silent = nil
+      VELOR$AutoFireUntil = 0
         getgenv().NexvyrTargetPart = nil
-        nexvyrRestoreHooks()
+      VELOR$RestoreHooks()
     end
 end
 local nexvyrUpdateTargetWorkers
 nexvyrUpdateTargetFeatures = function()
-    nexvyrRefreshTargetMonitor()
-    nexvyrUpdateHook()
+  VELOR$RefreshTargetMonitor()
+  VELOR$UpdateHook()
     if nexvyrUpdateTargetWorkers then nexvyrUpdateTargetWorkers() end
 end
 
 local nexvyrAutoShootWorkerRunning = false
 nexvyrStartAutoShootWorker = function()
     if nexvyrAutoShootWorkerRunning or not (autoShootEnabled or autoShootAgresivoEnabled) then return end
-    nexvyrAutoShootWorkerRunning = true
+  VELOR$AutoShootWorkerRunning = true
     task.spawn(function()
     local params = RaycastParams.new()
     params.FilterType = Enum.RaycastFilterType.Exclude
@@ -3689,7 +3689,7 @@ nexvyrStartAutoShootWorker = function()
             if autoShootAgresivoEnabled then
                 if esCuchillo(arma) then nexvyrSetAimTarget("Auto", nil) continue end
             elseif not esPistola(arma) then
-                nexvyrSetAimTarget("Auto", nil) continue
+              VELOR$SetAimTarget("Auto", nil) continue
             end
             local closestTargetPart = nil
             local shortestDistance = math.huge
@@ -3779,27 +3779,27 @@ nexvyrStartAutoShootWorker = function()
                 end
             end
             if closestTargetPart then
-                nexvyrAutoFireUntil = os.clock() + 0.35
-                nexvyrSetAimTarget("Auto", closestTargetPart)
+              VELOR$AutoFireUntil = os.clock() + 0.35
+              VELOR$SetAimTarget("Auto", closestTargetPart)
                 pcall(function()
                     arma:Activate()
                     task.delay(0.05, function() if arma.Parent == char then arma:Deactivate() end end)
                 end)
                 task.wait(0.2)
             else
-                nexvyrSetAimTarget("Auto", nil)
+              VELOR$SetAimTarget("Auto", nil)
             end
         end
     end
-    nexvyrSetAimTarget("Auto", nil)
-    nexvyrAutoShootWorkerRunning = false
+  VELOR$SetAimTarget("Auto", nil)
+  VELOR$AutoShootWorkerRunning = false
     end)
 end
 
 local nexvyrSilentWorkerRunning = false
 nexvyrStartSilentAimWorker = function()
     if nexvyrSilentWorkerRunning or not (silentAimManualEnabled or silentAimFovEnabled) then return end
-    nexvyrSilentWorkerRunning = true
+  VELOR$SilentWorkerRunning = true
     task.spawn(function()
     local params = RaycastParams.new()
     params.FilterType = Enum.RaycastFilterType.Exclude
@@ -3861,14 +3861,14 @@ nexvyrStartSilentAimWorker = function()
                 end
             end
             if closestTargetPart then
-                nexvyrSetAimTarget("Silent", closestTargetPart)
+              VELOR$SetAimTarget("Silent", closestTargetPart)
             else
-                nexvyrSetAimTarget("Silent", nil)
+              VELOR$SetAimTarget("Silent", nil)
             end
         end
     end
-    nexvyrSetAimTarget("Silent", nil)
-    nexvyrSilentWorkerRunning = false
+  VELOR$SetAimTarget("Silent", nil)
+  VELOR$SilentWorkerRunning = false
     end)
 end
 
@@ -3965,11 +3965,11 @@ do
 local nexvyrInvisibleConnection
 nexvyrSetInvisibleWorker = function(state)
     if nexvyrInvisibleConnection then
-        nexvyrInvisibleConnection:Disconnect()
-        nexvyrInvisibleConnection = nil
+      VELOR$InvisibleConnection:Disconnect()
+      VELOR$InvisibleConnection = nil
     end
     if not state then return end
-    nexvyrInvisibleConnection = RunService.Heartbeat:Connect(function()
+  VELOR$InvisibleConnection = RunService.Heartbeat:Connect(function()
         if not InvisibilityActive then return end
         local Char = player.Character
         if Char then
@@ -4399,7 +4399,7 @@ UIElements.TogEspGl = Tabs.Vis:Toggle({
 local nexvyrESPWorkerRunning = false
 nexvyrStartESPWorker = function()
     if nexvyrESPWorkerRunning or not espAnyActive() then return end
-    nexvyrESPWorkerRunning = true
+  VELOR$ESPWorkerRunning = true
     task.spawn(function()
         local removingConnection = Players.PlayerRemoving:Connect(cleanESP)
         while espAnyActive() do
@@ -4522,7 +4522,7 @@ nexvyrStartESPWorker = function()
         end
         removingConnection:Disconnect()
         cleanAllESPs()
-        nexvyrESPWorkerRunning = false
+      VELOR$ESPWorkerRunning = false
     end)
 end
 
@@ -4547,7 +4547,7 @@ nexvyrStartFOVWorker = function()
         FOVCircle.Visible = false
     end
     if not FOVCircle or nexvyrFOVConnection then return end
-    nexvyrFOVConnection = RunService.RenderStepped:Connect(function()
+  VELOR$FOVConnection = RunService.RenderStepped:Connect(function()
         if not fovVisiblePreference then return end
         local currentCamera = workspace.CurrentCamera
         if not currentCamera then return end
@@ -4570,7 +4570,7 @@ UIElements.TogAutoFarmEvent = Tabs.Farm:Toggle({
     Title = "Auto Farmear Evento",
     Callback = function(s)
         getgenv().AutoEventFarm = s
-        nexvyrFarmSession += 1
+      VELOR$FarmSession += 1
         local session = nexvyrFarmSession
         if s then
             task.spawn(function()
@@ -4716,7 +4716,7 @@ end
 local nexvyrAnimationWorkerRunning = false
 nexvyrStartAnimationWorker = function()
     if nexvyrAnimationWorkerRunning or not animacionActualActiva then return end
-    nexvyrAnimationWorkerRunning = true
+  VELOR$AnimationWorkerRunning = true
     task.spawn(function()
     while animacionActualActiva do
         task.wait(0.2)
@@ -4750,7 +4750,7 @@ nexvyrStartAnimationWorker = function()
             end
         end
     end
-    nexvyrAnimationWorkerRunning = false
+  VELOR$AnimationWorkerRunning = false
     end)
 end
 
@@ -4777,7 +4777,7 @@ Tabs.Animaciones:Button({
         if selectedBundleCompleto == "Ninguno" then return end
         task.spawn(function()
             animacionActualActiva = animationData[selectedBundleCompleto]
-            nexvyrStartAnimationWorker()
+          VELOR$StartAnimationWorker()
             applyCustomAnims(animacionActualActiva)
         end)
     end
@@ -4826,7 +4826,7 @@ Tabs.Animaciones:Button({
             for _, v in pairs(customMix) do if v then hasValues = true break end end
             if hasValues then
                 animacionActualActiva = customMix
-                nexvyrStartAnimationWorker()
+              VELOR$StartAnimationWorker()
                 applyCustomAnims(animacionActualActiva)
             end
         end)
@@ -4934,7 +4934,7 @@ local nexvyrFireWatched = setmetatable({}, {__mode = "k"})
 local nexvyrToolWatched = setmetatable({}, {__mode = "k"})
 local nexvyrShootRootWatched = setmetatable({}, {__mode = "k"})
 local function nexvyrTrackShoot(connection)
-    nexvyrShootConnections[#nexvyrShootConnections + 1] = connection
+  VELOR$ShootConnections[#nexvyrShootConnections + 1] = connection
     return connection
 end
 local function nexvyrStopShootWatchers()
@@ -4959,8 +4959,8 @@ local function HookFireSound(s)
     if not s:IsA("Sound") then return end
     if not isFireSound(s) then return end
     if not RecargaDisparoEnabled or nexvyrFireWatched[s] then return end
-    nexvyrFireWatched[s] = true
-    nexvyrTrackShoot(s.Played:Connect(function()
+  VELOR$FireWatched[s] = true
+  VELOR$TrackShoot(s.Played:Connect(function()
         if not RecargaDisparoEnabled then return end
         local char = player.Character
         if not char then return end
@@ -4974,8 +4974,8 @@ local function HookShootOnTool(tool)
     if not tool or not tool:IsA("Tool") then return end
     for _, d in ipairs(tool:GetDescendants()) do HookFireSound(d) end
     if not nexvyrToolWatched[tool] and RecargaDisparoEnabled then
-        nexvyrToolWatched[tool] = true
-        nexvyrTrackShoot(tool.DescendantAdded:Connect(HookFireSound))
+      VELOR$ToolWatched[tool] = true
+      VELOR$TrackShoot(tool.DescendantAdded:Connect(HookFireSound))
     end
 end
 
@@ -4984,7 +4984,7 @@ local function HookShootOnRoot(root)
     for _, child in ipairs(root:GetChildren()) do
         if child:IsA("Tool") then HookShootOnTool(child) end
     end
-    nexvyrTrackShoot(root.ChildAdded:Connect(function(child)
+  VELOR$TrackShoot(root.ChildAdded:Connect(function(child)
         if child:IsA("Tool") then HookShootOnTool(child) end
     end))
 end
@@ -4992,7 +4992,7 @@ end
 local nexvyrReloadRunning = false
 nexvyrStartReloadWorker = function()
     if nexvyrReloadRunning or not RecargaDisparoEnabled then return end
-    nexvyrReloadRunning = true
+  VELOR$ReloadRunning = true
     task.spawn(function()
     local lastReloadState = false
     while RecargaDisparoEnabled do
@@ -5006,7 +5006,7 @@ nexvyrStartReloadWorker = function()
         if recargando and not lastReloadState then PlayReloadSound() end
         lastReloadState = recargando
     end
-    nexvyrReloadRunning = false
+  VELOR$ReloadRunning = false
     end)
 end
 
@@ -5063,7 +5063,7 @@ local nexvyrKillWatchedPlayers = setmetatable({}, {__mode = "k"})
 local nexvyrKillWatchedContainers = setmetatable({}, {__mode = "k"})
 local nexvyrKillRemoteSession = 0
 local function nexvyrTrackKill(connection)
-    nexvyrKillConnections[#nexvyrKillConnections + 1] = connection
+  VELOR$KillConnections[#nexvyrKillConnections + 1] = connection
     return connection
 end
 local KILL_STAT_NAMES = { kos = true, kills = true, kill = true, ko = true, killed = true, eliminations = true, kills_count = true }
@@ -5073,9 +5073,9 @@ local function HookStatValue(stat)
     if not (stat:IsA("IntValue") or stat:IsA("NumberValue")) then return end
     if not KILL_STAT_NAMES[string.lower(stat.Name)] then return end
     if not KillSoundEnabled or nexvyrKillWatchedStats[stat] then return end
-    nexvyrKillWatchedStats[stat] = true
+  VELOR$KillWatchedStats[stat] = true
     local lastVal = stat.Value
-    nexvyrTrackKill(stat:GetPropertyChangedSignal("Value"):Connect(function()
+  VELOR$TrackKill(stat:GetPropertyChangedSignal("Value"):Connect(function()
         if stat.Value > lastVal then TryPlayKillSound() end
         lastVal = stat.Value
     end))
@@ -5083,16 +5083,16 @@ end
 
 local function HookLeaderstatsContainer(container)
     if not container or not KillSoundEnabled or nexvyrKillWatchedContainers[container] then return end
-    nexvyrKillWatchedContainers[container] = true
+  VELOR$KillWatchedContainers[container] = true
     for _, stat in ipairs(container:GetChildren()) do HookStatValue(stat) end
-    nexvyrTrackKill(container.ChildAdded:Connect(HookStatValue))
+  VELOR$TrackKill(container.ChildAdded:Connect(HookStatValue))
 end
 
 local KILL_ATTR_NAMES = {"KOs","Kills","kos","kills","KO","killed","Eliminations"}
 local function nexvyrWatchLocalKillStats()
     for _, attrName in ipairs(KILL_ATTR_NAMES) do
         local lastVal = tonumber(player:GetAttribute(attrName))
-        nexvyrTrackKill(player:GetAttributeChangedSignal(attrName):Connect(function()
+      VELOR$TrackKill(player:GetAttributeChangedSignal(attrName):Connect(function()
             local newVal = tonumber(player:GetAttribute(attrName))
             if newVal ~= nil and lastVal ~= nil and newVal > lastVal then TryPlayKillSound() end
             lastVal = newVal
@@ -5101,7 +5101,7 @@ local function nexvyrWatchLocalKillStats()
     for _, name in ipairs({"leaderstats", "Stats", "stats", "PlayerStats"}) do
         HookLeaderstatsContainer(player:FindFirstChild(name))
     end
-    nexvyrTrackKill(player.ChildAdded:Connect(function(child)
+  VELOR$TrackKill(player.ChildAdded:Connect(function(child)
         if child.Name == "leaderstats" or child.Name == "Stats" or child.Name == "stats"
             or child.Name == "PlayerStats" then HookLeaderstatsContainer(child) end
     end))
@@ -5109,12 +5109,12 @@ end
 
 local function HookKillOnCharacter(other, character)
     if not KillSoundEnabled or nexvyrKillWatchedCharacters[character] then return end
-    nexvyrKillWatchedCharacters[character] = true
+  VELOR$KillWatchedCharacters[character] = true
     local waitConnection
     local function attachHumanoid(humanoid)
         if not KillSoundEnabled or not humanoid or not humanoid:IsA("Humanoid") then return end
         if waitConnection then waitConnection:Disconnect(); waitConnection = nil end
-        nexvyrTrackKill(humanoid.Died:Connect(function()
+      VELOR$TrackKill(humanoid.Died:Connect(function()
             if not KillSoundEnabled then return end
             local tag = humanoid:FindFirstChild("creator")
             if tag and tag.Value == player then TryPlayKillSound() end
@@ -5129,15 +5129,15 @@ end
 
 local function HookKillPlayer(other)
     if other == player or not KillSoundEnabled or nexvyrKillWatchedPlayers[other] then return end
-    nexvyrKillWatchedPlayers[other] = true
+  VELOR$KillWatchedPlayers[other] = true
     if other.Character then HookKillOnCharacter(other, other.Character) end
-    nexvyrTrackKill(other.CharacterAdded:Connect(function(character)
+  VELOR$TrackKill(other.CharacterAdded:Connect(function(character)
         HookKillOnCharacter(other, character)
     end))
 end
 
 local function nexvyrHookKilledRemote()
-    nexvyrKillRemoteSession += 1
+  VELOR$KillRemoteSession += 1
     local session = nexvyrKillRemoteSession
     task.spawn(function()
         local tries = 0
@@ -5146,7 +5146,7 @@ local function nexvyrHookKilledRemote()
             local networking = packages and packages:FindFirstChild("Networking")
             local remote = networking and networking:FindFirstChild("RE/Combat/Killed")
             if remote and remote:IsA("RemoteEvent") then
-                nexvyrTrackKill(remote.OnClientEvent:Connect(function(killer)
+              VELOR$TrackKill(remote.OnClientEvent:Connect(function(killer)
                     if killer == player then TryPlayKillSound(true) end
                 end))
                 return
@@ -5159,13 +5159,13 @@ end
 
 local function nexvyrStartKillWatchers()
     if not KillSoundEnabled then return end
-    nexvyrHookKilledRemote()
-    nexvyrWatchLocalKillStats()
+  VELOR$HookKilledRemote()
+  VELOR$WatchLocalKillStats()
     for _, other in ipairs(Players:GetPlayers()) do HookKillPlayer(other) end
-    nexvyrTrackKill(Players.PlayerAdded:Connect(HookKillPlayer))
+  VELOR$TrackKill(Players.PlayerAdded:Connect(HookKillPlayer))
 end
 local function nexvyrStopKillWatchers()
-    nexvyrKillRemoteSession += 1
+  VELOR$KillRemoteSession += 1
     dmvsDisconnectConnectionList(nexvyrKillConnections)
     table.clear(nexvyrKillWatchedStats)
     table.clear(nexvyrKillWatchedCharacters)
@@ -5183,13 +5183,13 @@ local function MuteOwnSound(s)
     if RecargaDisparoEnabled then s.Volume = 0 end
     if not HookedGunSounds[s] then
         HookedGunSounds[s] = true
-        nexvyrTrackShoot(s:GetPropertyChangedSignal("Volume"):Connect(function()
+      VELOR$TrackShoot(s:GetPropertyChangedSignal("Volume"):Connect(function()
             if RecargaDisparoEnabled and s.Volume ~= 0 then
                 OriginalGunVolumes[s] = s.Volume
                 s.Volume = 0
             end
         end))
-        nexvyrTrackShoot(s.Played:Connect(function()
+      VELOR$TrackShoot(s.Played:Connect(function()
             if RecargaDisparoEnabled then s.Volume = 0 end
         end))
     end
@@ -5198,7 +5198,7 @@ end
 local function HookOwnRoot(root)
     if not root then return end
     for _, d in ipairs(root:GetDescendants()) do MuteOwnSound(d) end
-    nexvyrTrackShoot(root.DescendantAdded:Connect(MuteOwnSound))
+  VELOR$TrackShoot(root.DescendantAdded:Connect(MuteOwnSound))
 end
 
 local function ApplyMuteState(state)
@@ -5224,22 +5224,22 @@ local function nexvyrStartShootWatchers()
     if not RecargaDisparoEnabled then return end
     local function attach(root)
         if not root or not RecargaDisparoEnabled or nexvyrShootRootWatched[root] then return end
-        nexvyrShootRootWatched[root] = true
+      VELOR$ShootRootWatched[root] = true
         HookOwnRoot(root)
         HookShootOnRoot(root)
     end
     attach(player.Character)
     attach(player:FindFirstChildOfClass("Backpack"))
-    nexvyrTrackShoot(player.CharacterAdded:Connect(function(character)
+  VELOR$TrackShoot(player.CharacterAdded:Connect(function(character)
         if not RecargaDisparoEnabled then return end
         attach(character)
         local backpack = player:FindFirstChildOfClass("Backpack")
         if backpack then attach(backpack) end
     end))
-    nexvyrTrackShoot(player.ChildAdded:Connect(function(child)
+  VELOR$TrackShoot(player.ChildAdded:Connect(function(child)
         if child:IsA("Backpack") then attach(child) end
     end))
-    nexvyrStartReloadWorker()
+  VELOR$StartReloadWorker()
 end
 
 Tabs.Sonidos:Section({ Title = "Sonido de Muerte", Icon = "solar:speaker-bold" })
@@ -5252,9 +5252,9 @@ UIElements.TogKillSound = Tabs.Sonidos:Toggle({
         KillSoundEnabled = v
         if v then
             PreloadKillSound()
-            nexvyrStartKillWatchers()
+          VELOR$StartKillWatchers()
         else
-            nexvyrStopKillWatchers()
+          VELOR$StopKillWatchers()
             KillSoundPlayer:Stop()
         end
     end
@@ -5282,10 +5282,10 @@ UIElements.TogShootReload = Tabs.Sonidos:Toggle({
         if RecargaDisparoEnabled == v then return end
         RecargaDisparoEnabled = v
         if v then
-            nexvyrStartShootWatchers()
+          VELOR$StartShootWatchers()
             ApplyMuteState(true)
         else
-            nexvyrStopShootWatchers()
+          VELOR$StopShootWatchers()
             ShootSoundPlayer:Stop()
             ReloadSoundPlayer:Stop()
             ApplyMuteState(false)
