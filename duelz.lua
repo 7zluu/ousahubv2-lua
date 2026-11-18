@@ -811,7 +811,7 @@ local Window = WindUI:CreateWindow({
     Background = "rbxthumb://type=Asset&id=140316387608545&w=420&h=420",
     BackgroundImageTransparency = 0.8,
     OpenButton = {
-        Title = "Open HUB",
+        Title = "6call hub",
         Icon = "rbxthumb://type=Asset&id=118232139384203&w=420&h=420",
         IconSize = 9,
         CornerRadius = UDim.new(1),
@@ -868,7 +868,7 @@ do
     end
     rendered[#rendered + 1] = ""
     rendered[#rendered + 1] = string.format(
-        "<font color='%s'>No se preocupen cuando aparezca una notificación de obscura, es totalmente normal y forma parte de </font><font color='%s'>Open HUB</font>",
+        "<font color='%s'>No se preocupen cuando aparezca una notificación de obscura, es totalmente normal y forma parte de </font><font color='%s'>6call hub</font>",
         WHITE, PINK
     )
     Tabs.Informaciones:Section({ Title = "Nuevas cosas agregadas", Icon = "solar:info-circle-bold" })
