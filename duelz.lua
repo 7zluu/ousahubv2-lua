@@ -4,7 +4,7 @@ local TweenService     = game:GetService("TweenService")
 local RunService       = game:GetService("RunService")
 local Debris           = game:GetService("Debris")
 
-local WORD    = "sexcall"
+local WORD    = "6call"
 local FONT    = Enum.Font.Garamond
 local FX_LEVEL = 1
 
