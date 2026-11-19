@@ -808,7 +808,7 @@ local Window = WindUI:CreateWindow({
     NewElements = true,
     HideSearchBar = false,
     ToggleKey = Enum.KeyCode.F15,
-    Background = "rbxthumb://type=Asset&id=128793089163759&w=420&h=420",
+    Background = "rbxthumb://type=Asset&id=123710972506847&w=420&h=420",
     BackgroundImageTransparency = 0.8,
     OpenButton = {
         Title = "6call hub",
